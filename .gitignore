@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local agent settings and temp files (never commit)
+.claude/settings.local.json
+*.local.json
+*.log
+*.tmp
+.cache/
+tmp/

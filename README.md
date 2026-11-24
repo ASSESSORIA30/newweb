@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Assessoria 3.0 · Propostes de la nova pàgina principal (fase 1)
 
-## Getting Started
+Tres prototips navegables de la home amb SavEnergy IA com a protagonista.
 
-First, run the development server:
+| Ruta | Proposta |
+| --- | --- |
+| `/` | Selector i comparativa de les tres propostes (previsualitzacions en viu, escriptori/mòbil) |
+| `/concept-a` | A · Energy Intelligence — instrument de mesura, camp 3D (Three.js) de soroll a senyal |
+| `/concept-b` | B · Premium Minimal — grafit i porcellana, la factura en 3D i vista explosionada |
+| `/concept-c` | C · Energy Revolution — el perfil de consum (llar/empresa) genera cintes i gràfics |
+
+## Posar-ho en marxa
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Per valorar la fluïdesa real de les animacions, millor la versió optimitzada:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build && npm run start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Què és real i què és simulat
 
-## Learn More
+- **Web actual:** serveis, oficines, telèfons i correu. Font única: `src/lib/content.ts`.
+- **Pendent de verificació:** xifres (+3.000 estudis, +500.000 €, +30 comercialitzadores) i testimonis. Es mostren amb l’etiqueta «Dades de la web actual · pendents de verificació» (`EVIDENCE_NOTE`) fins que el client les confirmi expressament.
+- **Simulat:** l’anàlisi de SavEnergy IA (`src/lib/useBillAnalysis.ts`), la factura d’exemple, el perfil horari i la xifra d’estalvi (`src/lib/bill-demo.ts`). Tot porta l’etiqueta «Simulació de demostració · sense connexió al CRM». El fitxer pujat no surt del navegador.
+- **Fase 2:** substituir `useBillAnalysis` per crides al lector de factures, motor de comparatives i catàleg de tarifes del CRM.
 
-To learn more about Next.js, take a look at the following resources:
+## Tecnologia
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · GSAP + ScrollTrigger + SplitText (`@gsap/react`) · Lenis · Three.js (concepte A) · `<ViewTransition>` de React per a les transicions entre pàgines. Tipografies auto-allotjades amb Fontsource.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Accessibilitat: `prefers-reduced-motion` (sense pins ni bucles), botó per aturar les animacions ambientals, focus visible, navegació per teclat (pestanyes amb fletxes), hover només amb punter fi.
 
-## Deploy on Vercel
+## Skills utilitzades (`.claude/skills/`)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Frontend Design (Anthropic), UI/UX Pro Max, GSAP Skills (8), Impeccable, Vercel React Best Practices, Web Design Guidelines, Vercel React View Transitions i les skills d’Emil Kowalski (emil-design-eng, apple-design, animate, review-animations, animation-performance, animation-vocabulary, choreograph…).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Context de producte per a Impeccable: `PRODUCT.md`; contractes de direcció per proposta: `.impeccable/surfaces/`.

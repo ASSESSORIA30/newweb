@@ -1,26 +1,197 @@
 @import "tailwindcss";
 
+@theme {
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@media (pointer: fine) {
+  html {
+    overscroll-behavior: none;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  min-height: 100dvh;
+}
+
+a,
+button,
+[role="button"],
+label[for] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+summary,
+label[for] {
+  cursor: pointer;
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 1000;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #000;
+  font-weight: 600;
+  transform: translateY(-200%);
+  transition: transform 200ms var(--ease-out);
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* ---------- Prototype chrome (not part of any design) ---------- */
+.proto-switcher {
+  position: fixed;
+  z-index: 90;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgb(18 20 19 / 0.72);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  box-shadow: 0 8px 24px -8px rgb(0 0 0 / 0.5), inset 0 1px 0 rgb(255 255 255 / 0.08);
+  font: 500 12px/1 system-ui, sans-serif;
+}
+.proto-switcher a {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: rgb(255 255 255 / 0.72);
+  text-decoration: none;
+  transition: background-color 160ms ease, color 160ms ease, transform 140ms var(--ease-out);
+}
+.proto-switcher a:active {
+  transform: scale(0.96);
+}
+@media (hover: hover) and (pointer: fine) {
+  .proto-switcher a:hover {
+    color: #fff;
+    background: rgb(255 255 255 / 0.08);
+  }
+}
+.proto-switcher a[aria-current="page"] {
+  background: #fff;
+  color: #000;
+}
+.proto-switcher a:focus-visible {
+  outline: 2px solid #3dff9a;
+  outline-offset: 2px;
+}
+.proto-switcher__home {
+  padding: 0 14px !important;
+}
+
+/* ---------- View transitions (React <ViewTransition>) ---------- */
+::view-transition-old(.page-to-left) {
+  animation: 420ms var(--ease-in-out) both vt-to-left;
+}
+::view-transition-new(.page-from-right) {
+  animation: 520ms var(--ease-out) both vt-from-right;
+}
+::view-transition-old(.page-to-right) {
+  animation: 420ms var(--ease-in-out) both vt-to-right;
+}
+::view-transition-new(.page-from-left) {
+  animation: 520ms var(--ease-out) both vt-from-left;
+}
+@keyframes vt-to-left {
+  to {
+    transform: translateX(-8%) scale(0.96);
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+@keyframes vt-to-right {
+  to {
+    transform: translateX(8%) scale(0.96);
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+@keyframes vt-from-right {
+  from {
+    transform: translateX(10%);
+    opacity: 0;
+  }
+}
+@keyframes vt-from-left {
+  from {
+    transform: translateX(-10%);
+    opacity: 0;
+  }
+}
+::view-transition-group(.morph) {
+  animation-duration: 560ms;
+  animation-timing-function: var(--ease-in-out);
+}
+::view-transition-image-pair(.morph) {
+  animation-name: vt-via-blur;
+}
+@keyframes vt-via-blur {
+  40% {
+    filter: blur(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Body copy: avoid single-word last lines (Impeccable straggler check). */
+.ca p,
+.cb p,
+.cc p,
+.sel p {
+  text-wrap: pretty;
 }
