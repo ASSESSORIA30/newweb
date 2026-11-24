@@ -7,11 +7,20 @@ import { captureAttribution } from "../lead/tracking";
 
 export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
   const [solid, setSolid] = useState(false);
+  const [navy, setNavy] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     captureAttribution();
-    const onScroll = () => setSolid(window.scrollY > 12);
+    const dark = Array.from(document.querySelectorAll<HTMLElement>("[data-tone=navy]"));
+    const onScroll = () => {
+      setSolid(window.scrollY > 12);
+      // Navy chapters under the bar (bar is ~72px tall): switch the material to navy.
+      setNavy(dark.some((el) => {
+        const r = el.getBoundingClientRect();
+        return r.top <= 36 && r.bottom >= 36;
+      }));
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -31,7 +40,7 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
   };
 
   return (
-    <header className="s-header" data-solid={solid || undefined} data-open={open || undefined}>
+    <header className="s-header" data-solid={solid || undefined} data-open={open || undefined} data-navy={navy || undefined}>
       <div className="s-header__bar">
         <a href={homePath(locale)} className="s-logo" aria-label="Assessoria 3.0">
           <img src="/brand/logo-a30-64.png" srcSet="/brand/logo-a30-64.png 1x, /brand/logo-a30-128.png 2x" width={34} height={34} alt="" />

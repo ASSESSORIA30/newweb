@@ -43,14 +43,13 @@ export function Services({ t }: { t: Dictionary }) {
         <p className="s-lede">{t.services.lede}</p>
       </div>
       <div className="s-wrap s-svc__grid">
-        <ol className="s-svc__list">
-          {keys.map((k, i) => {
+        <ul className="s-svc__list">
+          {keys.map((k) => {
             const s = t.services.items[k];
             const on = active === k;
             return (
               <li key={k} className="s-svc__row" data-key={k} data-on={on || undefined} onPointerEnter={() => setActive(k)}>
                 <div className="s-svc__title">
-                  <span className="s-measure s-svc__n">{String(i + 1).padStart(2, "0")}</span>
                   <h3>{s.name}</h3>
                 </div>
                 <div className="s-svc__body">
@@ -73,7 +72,7 @@ export function Services({ t }: { t: Dictionary }) {
               </li>
             );
           })}
-        </ol>
+        </ul>
         <div className="s-svc__stage" aria-hidden="true">
           <div className="s-svc__frame">
             <div className="s-grat s-grat--panel" />

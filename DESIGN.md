@@ -152,12 +152,15 @@ Controls 10px radius, panels 18px, pills (999px) only for segmented controls and
 ## Components
 
 - **Buttons**: primary blue / secondary white with hairline / on-navy white. Height 52px, press `scale(0.97)` 160ms ease-out, hover colour 200ms, gated to fine pointers.
-- **Energy field (hero)**: Three.js line field, normal blending on white; noise settles into a locked trace in 2.4s; dollies with scroll; paused off-screen, on hidden tabs and via the "Pause animation" control; static frame under reduced motion; not loaded on Save-Data or very low-power devices.
-- **SavEnergy instrument**: three modes (upload bill / estimate without bill / talk to an advisor) as a segmented control; desktop plays a pinned, scroll-scrubbed scan that identifies concepts on a sample bill and flags opportunities. Every simulated value carries the simulation label.
+- **Hero**: headline in two beats (statement in navy, reassurance in ink-2), each sentence rising out of its own clip mask in a pure-CSS entrance (≈1.1 s, from first paint, never replayed; phones paint it immediately for LCP). GSAP drives only the scroll exit.
+- **Energy field (hero)**: raw WebGL line field (no 3D library), normal blending on white, masked so it never crosses the copy; noise settles into a locked trace in 2.4 s; dollies with scroll; time advances only while drawing, so pause, hidden tabs and off-screen resume without a jump; 30 fps and fewer lines on modest devices; static frame under reduced motion; not loaded on Save-Data or very low-memory devices.
+- **SavEnergy instrument**: the sample bill is typeset as a document (issuer, CUPS, period, tariff, P1–P3 table, all synthetic and labelled); desktop plays a pinned, scroll-scrubbed scan that numbers each concept, fills the extracted readouts (power gauge vs registered peak, period bars) and lands the opportunities. Three entry modes (upload bill / estimate without bill / talk to an advisor) in a segmented control; keyboard switches are instant. Every simulated value carries the simulation label; no savings figure is shown until the CRM engine is connected.
 - **Services index**: large typographic rows; the active row drives a sticky, per-service generative visual (waveform, flow, pulse, radar, shield arcs).
-- **Audience switch**: Particulars / Empreses segmented control with a sliding thumb (260ms ease-in-out) swapping two compositions.
+- **Audience switch**: Particulars / Empreses segmented control with a sliding thumb (260 ms ease-in-out; instant for keyboard and reduced motion). Each side is drawn as a load profile on the graticule: one 24 h curve for a home, several supply points over the P1–P3 bands for a business.
 - **Process cycle**: five nodes on a ring; scroll advances the trace around it and returns to the start.
-- **Evidence & testimonials**: rendered only from data flagged `verified`; unverified data shows with the pending-verification label.
+- **Evidence & testimonials**: while unverified, figures are shown exactly as quoted, at title scale, without count-up, with a pending label on the block and on every testimonial, and savings in ink-2 instead of saving-green. Verified data unlocks count-up and saving-green. Case studies render only when real ones exist.
+- **Partners**: renders confirmed partners with authorised artwork in a quiet greyscale row; until then one sentence with the pending label (no placeholder logo wall).
+- **Header**: white material at 96% with blur; switches to navy material over the navy chapters (collaborators, close, footer).
 - **Forms**: labelled fields, inline errors, explicit consent, UTM and referral capture; submit goes through a lead adapter that is a local simulation until the CRM integration is authorised.
 
 ## Do's and Don'ts

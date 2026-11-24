@@ -4,7 +4,7 @@ import { company } from "../data/company";
 
 export function Footer({ t, locale }: { t: Dictionary; locale: Locale }) {
   return (
-    <footer className="s-footer">
+    <footer className="s-footer" data-tone="navy">
       <div className="s-wrap">
         <div className="s-footer__top">
           <div className="s-footer__brand">
@@ -47,7 +47,6 @@ export function Footer({ t, locale }: { t: Dictionary; locale: Locale }) {
         </div>
         <div className="s-footer__bottom">
           <span translate="no">© 2026 Assessoria 3.0. {t.footer.rights}</span>
-          <a href="/propostes">{t.footer.proposals}</a>
         </div>
       </div>
     </footer>

@@ -12,6 +12,7 @@ const ca = {
     simulationNote: "Simulació de demostració · sense connexió al CRM",
     pending: "Pendent de verificació",
     pendingNote: "Dades de la web actual · pendents de verificació",
+    fromCurrentSite: "Dades tal com apareixen a la web actual.",
     pauseMotion: "Atura l’animació",
     resumeMotion: "Reprèn l’animació",
     required: "obligatori",
@@ -34,7 +35,8 @@ const ca = {
     cta: "Analitza la factura",
   },
   hero: {
-    title: "L’energia del teu negoci. La tranquil·litat de tenir-la sota control.",
+    title: "L’energia del teu negoci.",
+    titleB: "La tranquil·litat de tenir-la sota control.",
     subtitle:
       "Analitzem, comparem i gestionem els teus subministraments perquè paguis el que realment et correspon.",
     primary: "Analitza la meva factura",
@@ -63,6 +65,20 @@ const ca = {
         { k: "meter", label: "Lloguer del comptador", value: "30 dies" },
         { k: "tax", label: "Impost elèctric i IVA", value: "Aplicats" },
       ],
+      doc: {
+        issuer: "Comercialitzadora d’exemple",
+        cups: "CUPS",
+        cupsValue: "ES00 0000 0000 0000 0000 XX",
+        period: "Període",
+        periodValue: "01/09 – 30/09 · 30 dies",
+        tariff: "Tarifa",
+        tariffValue: "2.0TD",
+        table: ["Franja", "Potència", "Energia"],
+        rows: [["P1 punta", "4,6 kW", "106 kWh"], ["P2 pla", "—", "90 kWh"], ["P3 vall", "4,6 kW", "116 kWh"]],
+        peak: "Pic registrat",
+        peakValue: "3,1 kW",
+      },
+      readTitle: "Dades extretes",
       findingsTitle: "Oportunitats detectades",
       findings: [
         "La potència contractada supera el pic de consum registrat.",

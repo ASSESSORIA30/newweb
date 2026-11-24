@@ -16,7 +16,7 @@ export function Collaborators({ t, locale }: { t: Dictionary; locale: Locale }) 
   });
 
   return (
-    <section id="collaboradors" className="s-collab" aria-labelledby="s-collab-title">
+    <section id="collaboradors" data-tone="navy" className="s-collab" aria-labelledby="s-collab-title">
       <div className="s-wrap s-collab__grid">
         <div className="s-collab__copy">
           <h2 id="s-collab-title" className="s-h2">

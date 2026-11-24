@@ -76,40 +76,99 @@ function Scan({ t }: { t: Dictionary }) {
         <figure className="s-bill-wrap">
           <div className="s-bill" role="img" aria-label={s.billTag}>
             <div className="s-bill__head">
-              <strong>{s.billTitle}</strong>
-              <span>{s.billTag}</span>
-            </div>
-            <div className="s-bill__rule" aria-hidden="true">
-              <i style={{ width: "58%" }} />
-              <i style={{ width: "40%" }} />
-            </div>
-            {s.concepts.map((c, i) => (
-              <div key={c.k} className="s-bill__concept" data-k={c.k}>
-                <span className="s-bill__n s-measure">{i + 1}</span>
-                <span>{c.label}</span>
-                <b className="s-measure">{c.value}</b>
-                {i === 0 || i === 2 ? <span className="s-bill__flag" aria-hidden="true" /> : null}
+              <div>
+                <strong>{s.billTitle}</strong>
+                <span className="s-bill__issuer">{s.doc.issuer}</span>
               </div>
-            ))}
-            <div className="s-bill__rule" aria-hidden="true">
-              <i style={{ width: "74%" }} />
-              <i style={{ width: "52%" }} />
-              <i style={{ width: "66%" }} />
+              <span className="s-bill__tag">{s.billTag}</span>
             </div>
+            <dl className="s-bill__meta">
+              <div>
+                <dt>{s.doc.cups}</dt>
+                <dd className="s-measure">{s.doc.cupsValue}</dd>
+              </div>
+              <div>
+                <dt>{s.doc.period}</dt>
+                <dd className="s-measure">{s.doc.periodValue}</dd>
+              </div>
+              <div>
+                <dt>{s.doc.tariff}</dt>
+                <dd className="s-measure">{s.doc.tariffValue}</dd>
+              </div>
+            </dl>
+            <div className="s-bill__concepts">
+              {s.concepts.map((c, i) => (
+                <div key={c.k} className="s-bill__concept" data-k={c.k}>
+                  <span className="s-bill__n s-measure">{i + 1}</span>
+                  <span>{c.label}</span>
+                  <b className="s-measure">{c.value}</b>
+                  {i === 0 || i === 2 ? <span className="s-bill__flag" aria-hidden="true" /> : null}
+                </div>
+              ))}
+            </div>
+            <table className="s-bill__table">
+              <thead>
+                <tr>
+                  {s.doc.table.map((h) => (
+                    <th key={h} scope="col">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {s.doc.rows.map((r) => (
+                  <tr key={r[0]}>
+                    <th scope="row">{r[0]}</th>
+                    <td className="s-measure">{r[1]}</td>
+                    <td className="s-measure">{r[2]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
             <span className="s-bill__scan" aria-hidden="true" />
           </div>
           <figcaption className="s-sim-note">{t.common.simulationNote}</figcaption>
         </figure>
 
         <div className="s-scan__out">
-          <ul className="s-chips" aria-label={s.steps[0].title}>
-            {s.concepts.map((c, i) => (
-              <li key={c.k} className="s-chip" data-i={i}>
-                <span className="s-measure">{i + 1}</span>
-                {c.label}
+          <div className="s-readouts">
+            <p className="s-readouts__title">{s.readTitle}</p>
+            <ul className="s-chips">
+              <li className="s-chip" data-i="0">
+                <span>{s.concepts[0].label}</span>
+                <b className="s-measure">{s.concepts[0].value}</b>
+                <span className="s-gauge" aria-hidden="true">
+                  <i style={{ width: "100%" }} />
+                  <i className="s-gauge__peak" style={{ width: `${(3.1 / 4.6) * 100}%` }} />
+                </span>
+                <small>
+                  {s.doc.peak} <span className="s-measure">{s.doc.peakValue}</span>
+                </small>
               </li>
-            ))}
-          </ul>
+              <li className="s-chip" data-i="1">
+                <span>{s.concepts[1].label}</span>
+                <b className="s-measure">{s.concepts[1].value}</b>
+              </li>
+              <li className="s-chip" data-i="2">
+                <span>{s.concepts[2].label}</span>
+                <span className="s-bars" aria-hidden="true">
+                  {[34, 29, 37].map((v, i) => (
+                    <i key={i} style={{ height: `${v * 2}%` }} data-peak={i === 0 || undefined} />
+                  ))}
+                </span>
+                <b className="s-measure">{s.concepts[2].value}</b>
+              </li>
+              <li className="s-chip" data-i="3">
+                <span>{s.concepts[3].label}</span>
+                <b className="s-measure">{s.concepts[3].value}</b>
+              </li>
+              <li className="s-chip" data-i="4">
+                <span>{s.concepts[4].label}</span>
+                <b className="s-measure">{s.concepts[4].value}</b>
+              </li>
+            </ul>
+          </div>
           <div className="s-findings">
             <p className="s-findings__title">
               {s.findingsTitle} <span className="s-sim">{t.common.simulation}</span>
@@ -373,6 +432,7 @@ function AdvisorPanel({ t, locale }: { t: Dictionary; locale: Locale }) {
 
 export function SavEnergy({ t, locale }: { t: Dictionary; locale: Locale }) {
   const [mode, setMode] = useState<Mode>("upload");
+  const [instant, setInstant] = useState(false);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const modes: Mode[] = ["upload", "estimate", "advisor"];
   const base = useId();
@@ -385,6 +445,7 @@ export function SavEnergy({ t, locale }: { t: Dictionary; locale: Locale }) {
     if (e.key === "End") n = 2;
     if (n < 0) return;
     e.preventDefault();
+    setInstant(true);
     setMode(modes[n]);
     tabs.current[n]?.focus();
   };
@@ -406,7 +467,7 @@ export function SavEnergy({ t, locale }: { t: Dictionary; locale: Locale }) {
             <p className="s-console__label" id={`${base}-l`}>
               {t.savenergy.modesLabel}
             </p>
-            <div role="tablist" aria-labelledby={`${base}-l`} className="s-seg" data-pos={modes.indexOf(mode)}>
+            <div role="tablist" aria-labelledby={`${base}-l`} className="s-seg" data-pos={modes.indexOf(mode)} data-instant={instant || undefined}>
               {modes.map((m, i) => (
                 <button
                   key={m}
@@ -419,7 +480,10 @@ export function SavEnergy({ t, locale }: { t: Dictionary; locale: Locale }) {
                   aria-selected={mode === m}
                   aria-controls={`${base}-p`}
                   tabIndex={mode === m ? 0 : -1}
-                  onClick={() => setMode(m)}
+                  onClick={() => {
+                    setInstant(false);
+                    setMode(m);
+                  }}
                   onKeyDown={(e) => onKey(e, i)}
                 >
                   {t.savenergy.modes[m]}
@@ -428,7 +492,7 @@ export function SavEnergy({ t, locale }: { t: Dictionary; locale: Locale }) {
               <span className="s-seg__thumb" aria-hidden="true" />
             </div>
           </div>
-          <div id={`${base}-p`} role="tabpanel" aria-labelledby={`${base}-t-${mode}`} className="s-console__panel" key={mode}>
+          <div id={`${base}-p`} role="tabpanel" aria-labelledby={`${base}-t-${mode}`} className="s-console__panel" data-instant={instant || undefined} key={mode}>
             {mode === "upload" ? <UploadPanel t={t} /> : null}
             {mode === "estimate" ? <EstimatePanel t={t} /> : null}
             {mode === "advisor" ? <AdvisorPanel t={t} locale={locale} /> : null}

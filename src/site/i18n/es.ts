@@ -13,6 +13,7 @@ const es: Dictionary = {
     simulationNote: "Simulación de demostración · sin conexión al CRM",
     pending: "Pendiente de verificación",
     pendingNote: "Datos de la web actual · pendientes de verificación",
+    fromCurrentSite: "Datos tal como aparecen en la web actual.",
     pauseMotion: "Detener la animación",
     resumeMotion: "Reanudar la animación",
     required: "obligatorio",
@@ -35,7 +36,8 @@ const es: Dictionary = {
     cta: "Analiza la factura",
   },
   hero: {
-    title: "La energía de tu negocio. La tranquilidad de tenerla bajo control.",
+    title: "La energía de tu negocio.",
+    titleB: "La tranquilidad de tenerla bajo control.",
     subtitle:
       "Analizamos, comparamos y gestionamos tus suministros para que pagues lo que realmente te corresponde.",
     primary: "Analiza mi factura",
@@ -64,6 +66,20 @@ const es: Dictionary = {
         { k: "meter", label: "Alquiler del contador", value: "30 días" },
         { k: "tax", label: "Impuesto eléctrico e IVA", value: "Aplicados" },
       ],
+      doc: {
+        issuer: "Comercializadora de ejemplo",
+        cups: "CUPS",
+        cupsValue: "ES00 0000 0000 0000 0000 XX",
+        period: "Periodo",
+        periodValue: "01/09 – 30/09 · 30 días",
+        tariff: "Tarifa",
+        tariffValue: "2.0TD",
+        table: ["Franja", "Potencia", "Energía"],
+        rows: [["P1 punta", "4,6 kW", "106 kWh"], ["P2 llano", "—", "90 kWh"], ["P3 valle", "4,6 kW", "116 kWh"]],
+        peak: "Pico registrado",
+        peakValue: "3,1 kW",
+      },
+      readTitle: "Datos extraídos",
       findingsTitle: "Oportunidades detectadas",
       findings: [
         "La potencia contratada supera el pico de consumo registrado.",

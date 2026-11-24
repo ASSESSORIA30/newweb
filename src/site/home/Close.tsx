@@ -38,7 +38,7 @@ export function Close({ t, locale }: { t: Dictionary; locale: Locale }) {
   );
 
   return (
-    <section ref={root} id="contacte" className="s-close" aria-labelledby="s-close-title">
+    <section ref={root} id="contacte" data-tone="navy" className="s-close" aria-labelledby="s-close-title">
       <div className="s-wrap s-close__grid">
         <div className="s-close__copy">
           <h2 id="s-close-title" className="s-close__title">
