@@ -9,6 +9,20 @@ Tres prototips navegables de la home amb SavEnergy IA com a protagonista.
 | `/concept-b` | B · Premium Minimal — grafit i porcellana, la factura en 3D i vista explosionada |
 | `/concept-c` | C · Energy Revolution — el perfil de consum (llar/empresa) genera cintes i gràfics |
 
+## Paletes del Concept A
+
+`/concept-a` té un selector de paleta (cantonada inferior esquerra; en mòbil, un botó amb la mostra de color). El canvi és instantani, amb una fosa de color de 450 ms i el camp Three.js retenyit amb GSAP, sense recarregar.
+
+| Codi | Paleta | Enllaç directe |
+| --- | --- | --- |
+| A | Original | `/concept-a` |
+| A1 | Deep Blue & Cyan | `/concept-a?paleta=a1` |
+| A2 | Champagne & Graphite | `/concept-a?paleta=a2` |
+| A3 | Electric Blue & White (clara) | `/concept-a?paleta=a3` |
+| A4 | Midnight Violet | `/concept-a?paleta=a4` |
+
+Font única de colors: `src/concepts/a/palettes.ts` (tokens semàntics per paleta; totes les parelles de text compleixen WCAG AA).
+
 ## Posar-ho en marxa
 
 ```bash

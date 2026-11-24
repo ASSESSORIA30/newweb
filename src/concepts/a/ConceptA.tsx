@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
 import { brand, evidence, EVIDENCE_NOTE, faqs, offices, services, steps, testimonials, type ServiceId } from "@/lib/content";
 import { DEMO_LABEL, demoEstimate, sampleBill } from "@/lib/bill-demo";
@@ -8,6 +8,8 @@ import { Counter } from "@/components/Counter";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { SignalField } from "./SignalField";
 import { AnalyzerA } from "./AnalyzerA";
+import { PaletteSwitcher } from "./PaletteSwitcher";
+import { paletteById, palettes, type Palette, type PaletteId } from "./palettes";
 import { MotionToggle } from "@/components/MotionToggle";
 import { isMotionPaused } from "@/lib/motion";
 
@@ -120,7 +122,7 @@ function Header() {
 
 /* ------------------------------------------------------------------ */
 
-function Hero() {
+function Hero({ palette }: { palette: Palette }) {
   const root = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -149,7 +151,7 @@ function Hero() {
 
   return (
     <section ref={root} className="a-hero" id="top" aria-labelledby="a-hero-title">
-      <SignalField className="a-hero__field" />
+      <SignalField className="a-hero__field" lead={palette.fieldLead} dim={palette.fieldDim} blend={palette.fieldBlend} />
       <div className="a-graticule" aria-hidden="true" />
       <div className="a-hero__inner">
         <div className="a-hero__copy">
@@ -682,21 +684,85 @@ function Footer() {
 
 /* ------------------------------------------------------------------ */
 
+const isPaletteId = (v: string | null): v is PaletteId => !!v && palettes.some((p) => p.id === v);
+
+// The URL (?paleta=a2) is the source of truth, so a palette can be shared as a link.
+const PALETTE_EVENT = "a-palettechange";
+const subscribePalette = (cb: () => void) => {
+  window.addEventListener(PALETTE_EVENT, cb);
+  window.addEventListener("popstate", cb);
+  return () => {
+    window.removeEventListener(PALETTE_EVENT, cb);
+    window.removeEventListener("popstate", cb);
+  };
+};
+const readPalette = (): PaletteId => {
+  const v = new URLSearchParams(window.location.search).get("paleta");
+  return isPaletteId(v) ? v : "original";
+};
+
 export function ConceptA() {
+  const paletteId = useSyncExternalStore(subscribePalette, readPalette, () => "original" as PaletteId);
+  const [repaint, setRepaint] = useState(false);
+  const palette = paletteById[paletteId];
+  const repaintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Fonts change line metrics: refresh trigger positions once they settle.
   useEffect(() => {
     document.fonts?.ready.then(() => ScrollTrigger.refresh());
   }, []);
 
+  // The document behind the page (overscroll, scrollbar, browser chrome) follows the palette.
+  useEffect(() => {
+    const root = document.documentElement;
+    const bg = palette.tokens.bg;
+    root.style.background = bg;
+    root.style.colorScheme = palette.scheme;
+    root.style.setProperty("scrollbar-color", `${palette.tokens["line-solid"]} ${bg}`);
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "theme-color";
+      document.head.appendChild(meta);
+    }
+    meta.content = bg;
+  }, [palette]);
+
+  useEffect(
+    () => () => {
+      const root = document.documentElement;
+      root.style.removeProperty("background");
+      root.style.removeProperty("color-scheme");
+      root.style.removeProperty("scrollbar-color");
+      if (repaintTimer.current) clearTimeout(repaintTimer.current);
+    },
+    [],
+  );
+
+  const choosePalette = useCallback((id: PaletteId) => {
+    setRepaint(true);
+    if (repaintTimer.current) clearTimeout(repaintTimer.current);
+    repaintTimer.current = setTimeout(() => setRepaint(false), 520);
+    const url = new URL(window.location.href);
+    if (id === "original") url.searchParams.delete("paleta");
+    else url.searchParams.set("paleta", id);
+    window.history.replaceState(window.history.state, "", url);
+    window.dispatchEvent(new Event(PALETTE_EVENT));
+  }, []);
+
+  const style = Object.fromEntries(
+    Object.entries(palette.tokens).map(([k, v]) => [`--${k}`, v]),
+  ) as React.CSSProperties;
+
   return (
-    <div className="ca">
+    <div className="ca" data-palette={palette.id} data-scheme={palette.scheme} data-repaint={repaint || undefined} style={style}>
       <a className="skip-link" href="#main-a">
         Vés al contingut
       </a>
       <SmoothScroll />
       <Header />
       <main id="main-a">
-        <Hero />
+        <Hero palette={palette} />
         <BillReader />
         <Evidence />
         <Channels />
@@ -707,6 +773,7 @@ export function ConceptA() {
         <Close />
       </main>
       <Footer />
+      <PaletteSwitcher value={paletteId} onChange={choosePalette} />
     </div>
   );
 }

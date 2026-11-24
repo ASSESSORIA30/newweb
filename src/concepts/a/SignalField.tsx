@@ -11,8 +11,18 @@ import { isMotionPaused } from "@/lib/motion";
  * - renders only while visible and the tab is active
  * - reduced motion: one locked, static frame
  */
-export function SignalField({ className }: { className?: string }) {
+type Props = { className?: string; lead: string; dim: string; blend: "add" | "normal" };
+
+export function SignalField({ className, lead, dim, blend }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
+  // Live handles into the scene so palette changes can retint it without rebuilding.
+  const sceneRef = useRef<{
+    lead: import("three").Color;
+    dim: import("three").Color;
+    material: import("three").ShaderMaterial;
+    THREE: typeof import("three");
+  } | null>(null);
+  const colorsRef = useRef({ lead, dim, blend });
 
   useEffect(() => {
     const host = hostRef.current;
@@ -44,15 +54,15 @@ export function SignalField({ className }: { className?: string }) {
         uTime: { value: 0 },
         uChaos: { value: reduce ? 0 : 1 },
         uPulse: { value: 0 },
-        uColor: { value: new THREE.Color("#3dff9a") },
-        uDim: { value: new THREE.Color("#5f7f78") },
+        uColor: { value: new THREE.Color(colorsRef.current.lead) },
+        uDim: { value: new THREE.Color(colorsRef.current.dim) },
       };
 
       const material = new THREE.ShaderMaterial({
         uniforms,
         transparent: true,
         depthWrite: false,
-        blending: THREE.AdditiveBlending,
+        blending: colorsRef.current.blend === "add" ? THREE.AdditiveBlending : THREE.NormalBlending,
         vertexShader: /* glsl */ `
           uniform float uTime;
           uniform float uChaos;
@@ -93,6 +103,8 @@ export function SignalField({ className }: { className?: string }) {
           }
         `,
       });
+
+      sceneRef.current = { lead: uniforms.uColor.value, dim: uniforms.uDim.value, material, THREE };
 
       const group = new THREE.Group();
       for (let r = 0; r < ROWS; r++) {
@@ -194,9 +206,36 @@ export function SignalField({ className }: { className?: string }) {
 
     return () => {
       disposed = true;
+      sceneRef.current = null;
       cleanup();
     };
   }, []);
+
+  // Palette change: tween both trace colours; switch blending for light grounds
+  // (additive light disappears on white).
+  useEffect(() => {
+    // Keep the latest palette for a scene that is still loading three.js.
+    colorsRef.current = { lead, dim, blend };
+    const s = sceneRef.current;
+    if (!s) return;
+    const { THREE, material } = s;
+    const wantBlend = blend === "add" ? THREE.AdditiveBlending : THREE.NormalBlending;
+    if (material.blending !== wantBlend) {
+      material.blending = wantBlend;
+      material.needsUpdate = true;
+    }
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const to = (c: import("three").Color, hex: string) => {
+      const target = new THREE.Color(hex);
+      return gsap.to(c, { r: target.r, g: target.g, b: target.b, duration: reduce ? 0.15 : 0.6, ease: "expo.out", overwrite: true });
+    };
+    const a = to(s.lead, lead);
+    const b = to(s.dim, dim);
+    return () => {
+      a.kill();
+      b.kill();
+    };
+  }, [lead, dim, blend]);
 
   return <div ref={hostRef} className={className} />;
 }
