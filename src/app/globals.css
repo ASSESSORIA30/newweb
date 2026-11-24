@@ -195,3 +195,7 @@ html.lenis body {
 .sel p {
   text-wrap: pretty;
 }
+
+.site p {
+  text-wrap: pretty;
+}

@@ -2,7 +2,10 @@ import "@fontsource-variable/schibsted-grotesk/wght.css";
 import "./selector.css";
 import { Selector } from "@/components/Selector";
 import { concepts } from "@/lib/concepts";
+import type { Metadata } from "next";
 import { PageTransition } from "@/components/PageTransition";
+
+export const metadata: Metadata = { title: "Propostes de disseny" };
 
 const rows: { label: string; key: "signature" | "type" | "tech" }[] = [
   { label: "Moment signatura", key: "signature" },
