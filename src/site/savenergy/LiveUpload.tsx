@@ -168,7 +168,7 @@ export function LiveUpload({ t, locale }: { t: Dictionary; locale: Locale }) {
           <>
             <div className="s-live__advisor">
               <h3 ref={headRef} tabIndex={-1}>{L.advisorTitle}</h3>
-              <p>{(o.reason === "fora_abast" && o.detail === "empresa" ? L.advisor.empresa : o.reason === "factura_no_representativa" ? (o.detail === "factura_antiga" ? L.advisor.factura_antiga : L.advisor.periode_curt) : L.advisor[o.reason]) ?? L.advisor.dades_insuficients}</p>
+              <p>{(o.reason === "fora_abast" && o.detail === "empresa" ? L.advisor.empresa : o.reason === "fora_abast" && o.detail === "segment" ? L.advisor.segment : o.reason === "factura_no_representativa" ? (o.detail === "factura_antiga" ? L.advisor.factura_antiga : L.advisor.periode_curt) : L.advisor[o.reason]) ?? L.advisor.dades_insuficients}</p>
             </div>
             <div className="s-row">
               {sess ? <button type="button" className="s-btn s-btn--primary" onClick={() => setPhase({ k: "contact", st: phase.st })}>{L.talk}</button> : <a href="#contacte" className="s-btn s-btn--primary">{L.talk}</a>}
@@ -196,23 +196,28 @@ const advisorState = (reason: string): SessionState => ({ status: "assessor", re
 /* ------------------------------------------------------------------ confirmació de dades */
 /** Modalitats de preu que el visitant pot triar (la mixta es tracta com a indexada: preus facturats per període). */
 type PriceMode = "fix24h" | "periodes" | "hores_promocionades" | "indexat" | "desconegut";
-const BASE_KEYS = ["days", "annualKwh", "kwh.P1", "kwh.P2", "kwh.P3", "kw.P1", "kw.P2"] as const;
-const PERIOD_PRICE_KEYS = ["energyPrice.P1", "energyPrice.P2", "energyPrice.P3"] as const;
 const BAND_KEYS = ["promoKwh", "promoPrice", "restKwh", "restPrice"] as const;
-const TAIL_KEYS = ["energyDiscountPct", "powerPrice.P1", "powerPrice.P2"] as const;
+const periodKeys = (k: string, n: number) => Array.from({ length: n }, (_, i) => `${k}.P${i + 1}`);
 const FLAT_KEY = "energyPrice.24h";
 /** Camps de preu d'energia que es mostren per a cada modalitat: exclusivament els que li corresponen. */
-const ENERGY_KEYS: Record<PriceMode, readonly string[]> = { fix24h: [FLAT_KEY], periodes: PERIOD_PRICE_KEYS, hores_promocionades: BAND_KEYS, indexat: PERIOD_PRICE_KEYS, desconegut: [] };
 
 function Confirm({ t, st, session, onDone, onError, headRef }: { t: Dictionary; st: SessionState; session: Session; onDone: (s: SessionState) => void; onError: (e: unknown) => void; headRef: React.RefObject<HTMLHeadingElement | null> }) {
   const L = t.savenergy.live;
   const byKey = new Map<string, PublicField>(st.fields.map((f) => [f.key, f]));
   const has = (k: string) => byKey.get(k)?.value != null;
+  // PERÍODES segons la tarifa d'accés: 2.0TD → 3 d'energia i 2 de potència; 3.0TD i 6.1TD → 6 i 6 (els diu el CRM)
+  const nE = st.periods?.energy === 6 ? 6 : 3, nP = st.periods?.power === 6 ? 6 : 2;
+  const BASE_KEYS = ["days", "annualKwh", ...periodKeys("kwh", nE), ...periodKeys("kw", nP)];
+  const PERIOD_PRICE_KEYS = periodKeys("energyPrice", nE);
+  const TAIL_KEYS = ["energyDiscountPct", ...periodKeys("powerPrice", nP)];
+  // les hores promocionades són una modalitat de 2.0TD; en sis períodes no s'ofereix
+  const MODES = (["fix24h", "periodes", "hores_promocionades", "indexat", "desconegut"] as const).filter((m) => nE === 3 || m !== "hores_promocionades");
+  const ENERGY_KEYS: Record<PriceMode, readonly string[]> = { fix24h: [FLAT_KEY], periodes: PERIOD_PRICE_KEYS, hores_promocionades: BAND_KEYS, indexat: PERIOD_PRICE_KEYS, desconegut: [] };
   // modalitat detectada pel lector; si el CRM no la informa, es dedueix de les dades llegides
   const detect = (): PriceMode => {
     const m = byKey.get("priceMode")?.value;
     const periods = PERIOD_PRICE_KEYS.map((k) => byKey.get(k)?.value);
-    if (m === "hores_promocionades" || (BAND_KEYS.some(has) && !PERIOD_PRICE_KEYS.every(has))) return "hores_promocionades";
+    if (nE === 3 && (m === "hores_promocionades" || (BAND_KEYS.some(has) && !PERIOD_PRICE_KEYS.every(has)))) return "hores_promocionades";
     if (m === "indexat" || m === "mixt") return "indexat";
     if (m === "fix24h" || (periods.every((x) => x != null) && new Set(periods).size === 1)) return "fix24h";
     if (m === "periodes" || PERIOD_PRICE_KEYS.some(has)) return "periodes";
@@ -247,10 +252,17 @@ function Confirm({ t, st, session, onDone, onError, headRef }: { t: Dictionary; 
     for (const k of BAND_KEYS) values[k] = mode === "hores_promocionades" ? num(k) : null;
     try { onDone(await api.confirm(session, values)); } catch (err) { onError(err); } finally { setBusy(false); }
   };
-  const label = (k: string) => (L.fields as Record<string, string>)[k] ?? k;
-  const missing = ENERGY_KEYS[mode].some((k) => num(k) == null) || num("powerPrice.P1") == null || num("powerPrice.P2") == null;
+  // 2.0TD: etiquetes amb el nom de la franja (punta, pla, vall); sis períodes: etiqueta genèrica «… P1…P6»
+  const label = (k: string) => {
+    const [kind, p] = k.split(".P");
+    const tpl = nE === 6 && p ? (L.fieldTpl as Record<string, string>)[kind] : undefined;
+    return tpl ? tpl.replace("{n}", p) : (L.fields as Record<string, string>)[k] ?? k;
+  };
+  const missing = ENERGY_KEYS[mode].some((k) => num(k) == null) || periodKeys("powerPrice", nP).some((k) => num(k) == null);
+  const eur2 = (k: string) => { const v = byKey.get(k)?.value; return typeof v === "number" && v > 0 ? v.toLocaleString("ca-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null; };
+  const limits = [eur2("reactiveEur") ? L.limits.reactive.replace("{eur}", eur2("reactiveEur")!) : null, eur2("excessPowerEur") ? L.limits.excess.replace("{eur}", eur2("excessPowerEur")!) : null].filter((x): x is string => !!x);
   return (
-    <form className="s-live s-live__panel" onSubmit={submit} noValidate data-price-mode={mode}>
+    <form className="s-live s-live__panel" onSubmit={submit} noValidate data-price-mode={mode} data-periods={`${nE}/${nP}`}>
       <h3 ref={headRef} tabIndex={-1}>{L.confirmTitle}</h3>
       <p>{L.confirmText}</p>
       <dl className="s-live__meta">
@@ -260,7 +272,7 @@ function Confirm({ t, st, session, onDone, onError, headRef }: { t: Dictionary; 
       <div className="s-field s-live__mode">
         <label htmlFor="sev-priceMode">{L.mode.label}</label>
         <select id="sev-priceMode" className="s-input" value={mode} onChange={(e) => setMode(e.target.value as PriceMode)} aria-describedby="sev-priceMode-h">
-          {(["fix24h", "periodes", "hores_promocionades", "indexat", "desconegut"] as const).map((m) => <option key={m} value={m}>{L.mode.options[m]}</option>)}
+          {MODES.map((m) => <option key={m} value={m}>{nE === 6 && m === "periodes" ? L.mode.periods6 : L.mode.options[m]}</option>)}
         </select>
         <span id="sev-priceMode-h" className="s-field__hint">{L.mode.hint}</span>
       </div>
@@ -302,6 +314,7 @@ function Confirm({ t, st, session, onDone, onError, headRef }: { t: Dictionary; 
           );
         })}
       </div>
+      {limits.map((x) => <p key={x} className="s-live__note" data-limit>{x}</p>)}
       {missing && mode !== "desconegut" ? <p className="s-live__note">{L.missingPrices}</p> : null}
       <button type="submit" className="s-btn s-btn--primary" disabled={busy} aria-busy={busy || undefined}>{busy ? <><span className="s-spin" aria-hidden="true" />{t.common.sending}</> : L.confirm}</button>
     </form>

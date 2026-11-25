@@ -31,6 +31,15 @@ const oldFields = [
   { key: "priceMode", value: "indexat", unit: null, status: "llegit" }, { key: "serviceFeeEur", value: 5.01, unit: "€", status: "llegit" },
 ];
 const oldSessions = new Set();
+// Escenari «3.0TD d'empresa» (utm_source=tri): sis períodes d'energia i de potència, amb energia reactiva facturada.
+const six = (k, unit, v) => v.map((x, i) => ({ key: `${k}.P${i + 1}`, value: x, unit, status: "llegit" }));
+const triFields = [
+  { key: "accessTariff", value: "3.0TD", unit: null, status: "llegit" }, { key: "customerKind", value: "empresa", unit: null, status: "llegit" }, { key: "days", value: 30, unit: "dies", status: "llegit" },
+  { key: "periodFrom", value: "2026-09-01", unit: "data", status: "llegit" }, { key: "periodTo", value: "2026-09-30", unit: "data", status: "llegit" }, { key: "priceMode", value: "periodes", unit: null, status: "llegit" },
+  ...six("kwh", "kWh", [800, 700, 600, 500, 400, 1200]), ...six("kw", "kW", [30, 30, 30, 30, 30, 45]), ...six("energyPrice", "€/kWh", [0.21, 0.19, 0.16, 0.14, 0.12, 0.11]), ...six("powerPrice", "€/kW·dia", [0.06, 0.04, 0.016, 0.014, 0.009, 0.005]),
+  { key: "reactiveEur", value: 18.5, unit: "€", status: "llegit" },
+];
+const triSessions = new Set();
 // Escenari «SIPS» (sessions obertes amb l'autorització del titular): consum anual real SIMULAT; mai el CUPS complet.
 const sipsSessions = new Set();
 const sipsInfo = { status: "ok", annualKwh: 3420, periods: [980, 870, 1570], from: "2025-11-01", to: "2026-10-31" };
@@ -60,8 +69,9 @@ http.createServer((req, res) => {
     log.push({ op: m[1], sigOk: true, ip: req.headers["x-a30-client-ip"], data });
     const old = oldSessions.has(data.session);
     const sipsOn = sipsSessions.has(data.session);
-    const promo = sipsOn ? { sips: sipsInfo } : promoSessions.has(data.session) ? { fields: promoFields, toConfirm: [] } : old ? { fields: oldFields, toConfirm: ["customerKind"], notice: "factura_antiga" } : {};
-    if (m[1] === "session") { const id = randomUUID(); if (data.utm?.source === "promo") promoSessions.add(id); if (data.utm?.source === "antiga") oldSessions.add(id); if (data.consents?.sips_titular === true && data.utm?.source === "sips") sipsSessions.add(id); return send(200, { session: id, access: "A".repeat(43), expiresAt: new Date(Date.now() + 864e5).toISOString(), maxBytes: 8388608, upload: { url: `http://localhost:${PORT}/upload/${randomUUID()}`, method: "PUT", headers: { "content-type": data.mime, "x-upsert": "false" } } }); }
+    const tri = triSessions.has(data.session);
+    const promo = tri ? { fields: triFields, toConfirm: [], periods: { energy: 6, power: 6 } } : sipsOn ? { sips: sipsInfo } : promoSessions.has(data.session) ? { fields: promoFields, toConfirm: [] } : old ? { fields: oldFields, toConfirm: ["customerKind"], notice: "factura_antiga" } : {};
+    if (m[1] === "session") { const id = randomUUID(); if (data.utm?.source === "promo") promoSessions.add(id); if (data.utm?.source === "antiga") oldSessions.add(id); if (data.utm?.source === "tri") triSessions.add(id); if (data.consents?.sips_titular === true && data.utm?.source === "sips") sipsSessions.add(id); return send(200, { session: id, access: "A".repeat(43), expiresAt: new Date(Date.now() + 864e5).toISOString(), maxBytes: 8388608, upload: { url: `http://localhost:${PORT}/upload/${randomUUID()}`, method: "PUT", headers: { "content-type": data.mime, "x-upsert": "false" } } }); }
     if (m[1] === "analyse") return send(200, state("analitzant"));
     if (m[1] === "status") { polls += 1; return send(200, polls < 2 ? state("analitzant") : state("llegida", promo)); }
     if (m[1] === "confirm") return send(200, state("resultat", { ...promo, notice: null, outcome: old ? { ...outcome, stale: { periodTo: data.values.periodTo }, variable: true } : sipsOn ? { ...outcome, basis: "anual", consumption: { kind: "sips", from: sipsInfo.from, to: sipsInfo.to } } : { ...outcome, consumption: { kind: "factura_anualitzada", from: null, to: null } }, toConfirm: [] }));

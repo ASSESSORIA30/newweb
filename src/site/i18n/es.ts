@@ -145,8 +145,14 @@ const es: Dictionary = {
         fallback: "No hemos podido usar los datos del SIPS (no disponibles, incompletos o antiguos). Calcularemos una comparativa orientativa con el consumo de esta factura.",
         source: { title: "Origen de los consumos", sips: "Consumo anual real del SIPS", sips_total: "Total anual del SIPS; reparto estimado con la factura", factura_anual: "Consumo anual indicado en la factura", factura_anualitzada: "Estimación a partir de una sola factura" } as Record<string, string>,
       },
+      fieldTpl: { kwh: "Consumo P{n}", kw: "Potencia P{n}", energyPrice: "Precio energía P{n}", powerPrice: "Precio potencia P{n}" } as Record<string, string>,
+      limits: {
+        reactive: "Tu factura incluye {eur} € de energía reactiva. Depende de la instalación, no de la comercializadora: no entra en la comparativa. Un asesor puede indicarte cómo reducirla.",
+        excess: "Tu factura incluye {eur} € de excesos de potencia. Dependen de la potencia contratada, no de la comercializadora: no entran en la comparativa. Un asesor puede revisar si te conviene ajustarla.",
+      },
       mode: {
         label: "Cómo te facturan la energía",
+        periods6: "Precios por periodos P1 a P6",
         hint: "Lo hemos detectado en tu factura. Cámbialo solo si no es correcto.",
         options: { fix24h: "Un solo precio todo el día (fijo 24 h)", periodes: "Precios por franjas P1, P2 y P3", hores_promocionades: "Horas promocionadas y no promocionadas", indexat: "Precio indexado o variable", desconegut: "No lo sé" } as Record<string, string>,
         notes: {
@@ -190,6 +196,7 @@ const es: Dictionary = {
       advisorTitle: "Lo revisamos contigo",
       advisor: {
         empresa: "Hemos detectado que el titular de esta factura es una empresa. De momento el comparador en línea solo cubre viviendas: un asesor revisará tu factura y te preparará una propuesta para empresas.",
+        segment: "De momento el comparador en línea no cubre este tipo de suministro. Déjanos tus datos y un asesor te preparará una propuesta a medida.",
         periode_curt: "Esta factura cubre muy pocos días y no es representativa de tu consumo: no podemos calcularte un ahorro anual fiable. Sube una factura de un mes completo o déjanos tus datos y un asesor lo revisará contigo.",
         factura_antiga: "Esta factura es antigua y sus precios ya no son los vigentes: no podemos calcularte un ahorro fiable. Sube tu última factura o déjanos tus datos y un asesor lo revisará contigo.",
         fora_abast: "Esta factura no es de una vivienda con tarifa 2.0TD o tiene valores fuera de lo que comparamos en línea. Un asesor la revisará personalmente.",

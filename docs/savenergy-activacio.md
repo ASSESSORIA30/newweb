@@ -8,6 +8,19 @@ Estat: **desenvolupat, apagat**. El comparador real només funciona quan es comp
    Si la base de dades de proves ja es va inicialitzar amb la 067, n'hi ha prou d'executar-hi el fitxer `068_savenergy_fiabilitat.sql`.
    I `069_savenergy_sips.sql` (consulta SIPS des de la web; tampoc activa res): afegeix `sips_per_session` (1), `sips_retries` (1) i `sips_max_age_months` (6) a `sev_settings`, la taula `sev_sips_calls` (recompte de consultes, sense cap CUPS) i les funcions de reserva atòmica `sev_reserve_sips` / `sev_settle_sips`.
 
+   I `070_savenergy_segments.sql` (segments d'empresa, 3.0TD i 6.1TD; no activa res): afegeix `business_max_annual_kwh` (2.000.000) i `business_max_power_kw` (1.000) a `sev_settings`, i la columna `provider` (`mock` / `real`) a `sev_sips_calls`. La funció `sev_reserve_sips` passa a exigir el proveïdor i a comptar els límits per proveïdor. **S'ha d'aplicar al mateix temps que el codi**: el codi nou crida la funció de tres paràmetres i el codi antic, la de dos.
+
+### Segments (activables des del panell)
+
+| Segment | Què admet | Per defecte |
+|---|---|---|
+| Electricitat 2.0TD · particulars | Titulars particulars, 3 períodes d'energia i 2 de potència | Activat |
+| Electricitat 2.0TD · empreses | Titulars empresa o autònoms amb CIF; ofertes de pime o industrials | Desactivat |
+| Electricitat 3.0TD | Qualsevol titular; 6 períodes d'energia i 6 de potència | Desactivat |
+| Electricitat 6.1TD | Qualsevol titular; 6 i 6 | Desactivat |
+
+Cada oferta es mostra només als subministraments de la seva tarifa d'accés i segment, i si compleix les seves condicions (consum anual, potències i, a les tarifes amb trams, la potència P6): ho decideix el motor de comparatives del CRM, que és l'únic que calcula. Cal publicar expressament les ofertes de 3.0TD i 6.1TD a «Tarifes autoritzades per publicar».
+
 ### Consulta SIPS (desactivada per defecte)
 
 Calen **totes** aquestes condicions perquè es faci una consulta: `sips_enabled` activat al panell, límits superiors a zero (`sips_daily_max` és 0 per defecte), la variable de servidor del CRM `SAVENERGY_SIPS_MODE` i l'autorització expressa del visitant (casella opcional, desmarcada per defecte).
@@ -17,6 +30,8 @@ Calen **totes** aquestes condicions perquè es faci una consulta: `sips_enabled`
 | (sense valor) o `off` | No es consulta res. La web no mostra la casella d'autorització. |
 | `mock` | Respostes **simulades** amb dades fictícies, per validar el flux. Mai en producció (s'ignora si `VERCEL_ENV=production`). |
 | `real` | Portal SIPS del CRM (`SIPS_USER` / `SIPS_PASSWORD`). **No l'activis** fins que s'hagin validat els permisos del proveïdor i hi hagi credencials de proves. |
+
+El SIPS simulat i el real no es barregen mai: cada dada porta el proveïdor que l'ha servida i només es reutilitza amb aquell mateix proveïdor; els límits i les estadístiques també es compten per separat. El simulat no llegeix ni escriu la memòria cau del SIPS real (`sips_cache`).
 
 Només es consulta el CUPS llegit de la factura al servidor: cap operació pública n'accepta cap. El visitant veu el consum anual i les dates, mai el CUPS complet ni la resposta del SIPS. Les potències contractades són sempre les de la factura.
 2. Variables configurades a la web i al CRM.

@@ -144,8 +144,14 @@ const ca = {
         fallback: "No hem pogut fer servir les dades del SIPS (no disponibles, incompletes o antigues). Calcularem una comparativa orientativa amb el consum d'aquesta factura.",
         source: { title: "Origen dels consums", sips: "Consum anual real del SIPS", sips_total: "Total anual del SIPS; repartiment estimat amb la factura", factura_anual: "Consum anual indicat a la factura", factura_anualitzada: "Estimació a partir d'una sola factura" } as Record<string, string>,
       },
+      fieldTpl: { kwh: "Consum P{n}", kw: "Potència P{n}", energyPrice: "Preu energia P{n}", powerPrice: "Preu potència P{n}" } as Record<string, string>,
+      limits: {
+        reactive: "La teva factura inclou {eur} € d'energia reactiva. Depèn de la instal·lació, no de la comercialitzadora: no entra a la comparativa. Un assessor et pot dir com reduir-la.",
+        excess: "La teva factura inclou {eur} € d'excessos de potència. Depenen de la potència contractada, no de la comercialitzadora: no entren a la comparativa. Un assessor pot revisar si et convé ajustar-la.",
+      },
       mode: {
         label: "Com et facturen l'energia",
+        periods6: "Preus per períodes P1 a P6",
         hint: "L'hem detectat a la teva factura. Canvia-ho només si no és correcte.",
         options: { fix24h: "Un sol preu tot el dia (fix 24 h)", periodes: "Preus per franges P1, P2 i P3", hores_promocionades: "Hores promocionades i no promocionades", indexat: "Preu indexat o variable", desconegut: "No ho sé" } as Record<string, string>,
         notes: {
@@ -189,6 +195,7 @@ const ca = {
       advisorTitle: "Ho revisem amb tu",
       advisor: {
         empresa: "Hem detectat que el titular d'aquesta factura és una empresa. De moment el comparador en línia només cobreix habitatges: un assessor revisarà la teva factura i et prepararà una proposta per a empreses.",
+        segment: "De moment el comparador en línia no cobreix aquest tipus de subministrament. Deixa'ns les teves dades i un assessor et prepararà una proposta a mida.",
         periode_curt: "Aquesta factura cobreix molt pocs dies i no és representativa del teu consum: no et podem calcular un estalvi anual fiable. Puja una factura d'un mes complet o deixa'ns les dades i un assessor ho revisarà amb tu.",
         factura_antiga: "Aquesta factura és antiga i els seus preus ja no són els vigents: no et podem calcular un estalvi fiable. Puja la teva última factura o deixa'ns les dades i un assessor ho revisarà amb tu.",
         fora_abast: "Aquesta factura no és d'un habitatge amb tarifa 2.0TD o té valors fora del que comparem en línia. Un assessor la revisarà personalment.",

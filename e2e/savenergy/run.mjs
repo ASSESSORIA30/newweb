@@ -170,6 +170,38 @@ for (const [lang, opts, tag] of [["", { viewport: { width: 1440, height: 900 } }
   await ctx.close();
 }
 
+// 3.0TD d'empresa: el formulari s'adapta als sis períodes d'energia i de potència
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const p = await ctx.newPage();
+  const errs = []; p.on("pageerror", (e) => errs.push(e.message));
+  await p.route("https://challenges.cloudflare.com/**", (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: TURNSTILE }));
+  await p.addInitScript(() => localStorage.setItem("a30.consent.v1", JSON.stringify({ v: 1, analytics: false, at: "x" })));
+  await p.goto(`http://localhost:${WEB}/?utm_source=tri`, { waitUntil: "networkidle" });
+  await p.evaluate(() => window.dispatchEvent(new CustomEvent("a30:savenergy-mode", { detail: "upload" })));
+  const panel = p.locator(".s-live").first();
+  for (const cb of await panel.locator(".s-check:not([data-sips-consent]) input[type=checkbox]").all()) await cb.check();
+  await panel.locator("input[type=file]").setInputFiles(PDF);
+  await p.waitForSelector(".s-live__grid", { timeout: 15000 });
+  const ids = await p.locator(".s-live__grid input").evaluateAll((els) => els.map((e) => e.id.replace("sev-", "")));
+  const all6 = (k) => [1, 2, 3, 4, 5, 6].every((i) => ids.includes(`${k}.P${i}`));
+  ok((await p.locator(".s-live__panel").getAttribute("data-periods")) === "6/6" && all6("kwh") && all6("kw") && all6("energyPrice") && all6("powerPrice"), "3.0TD · sis períodes d'energia i sis de potència, amb els seus preus");
+  ok((await p.locator('[id="sev-kw.P6"]').inputValue()) === "45" && (await p.locator('[id="sev-energyPrice.P6"]').inputValue()) === "0,11", "3.0TD · valors llegits presentats, inclosa la potència P6");
+  ok(/Consum P6/.test(await p.locator('label[for="sev-kwh.P6"]').innerText()) && /Potència P6/.test(await p.locator('label[for="sev-kw.P6"]').innerText()), "3.0TD · etiquetes genèriques P1–P6");
+  const opts = await p.locator("#sev-priceMode option").evaluateAll((els) => els.map((e) => e.value));
+  ok(!opts.includes("hores_promocionades") && opts.includes("periodes") && opts.includes("indexat"), `3.0TD · modalitats de sis períodes (${opts.join(", ")})`);
+  ok((await p.locator("#sev-customerKind").count()) === 0, "3.0TD · titular empresa identificat: no es torna a preguntar");
+  ok((await p.locator("[data-limit]").count()) === 1 && /18,50 € d'energia reactiva/.test(await p.locator("[data-limit]").innerText()), "3.0TD · limitació indicada: la reactiva no entra a la comparativa");
+  await p.selectOption("#sev-priceMode", "fix24h");
+  ok((await p.locator('[id="sev-energyPrice.24h"]').count()) === 1 && (await p.locator('[id="sev-energyPrice.P1"]').count()) === 0 && (await p.locator('[id="sev-powerPrice.P6"]').count()) === 1, "3.0TD · «fix 24 h» mostra un sol preu d'energia i conserva els sis de potència");
+  await p.selectOption("#sev-priceMode", "periodes");
+  ok((await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)), "3.0TD · sense desbordament horitzontal");
+  await p.locator(".s-live__panel button[type=submit]").click();
+  await p.waitForSelector(".s-res__num");
+  ok(errs.length === 0, `3.0TD · sense errors de pàgina ${errs.join("|")}`);
+  await ctx.close();
+}
+
 // SIPS amb autorització expressa: casella opcional i desmarcada; amb l'autorització, el resultat indica l'origen dels consums
 {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
@@ -229,7 +261,9 @@ ok(ops.length > 0 && ops.every((x) => x.sigOk), "totes les peticions al CRM port
 const sess = ops.find((x) => x.op === "session");
 const ov = ops.filter((x) => x.op === "confirm").map((x) => x.data.values).find((x) => x.periodTo === "2024-02-04");
 ok(ov && ov.periodFrom === "2024-01-05" && ov.customerKind === "particular" && ov.serviceFeeEur === 5.01, "antiga · la confirmació envia el període, el tipus de client confirmat i el servei");
-ok(ops.filter((x) => x.op === "confirm" && x.data.values.periodTo !== "2024-02-04").every((x) => !("customerKind" in x.data.values) && x.data.values.periodTo === "2026-10-19"), "titular identificat: no es demana ni s'envia el tipus de client; el període llegit es confirma");
+ok(ops.filter((x) => x.op === "confirm" && x.data.values.periodTo !== "2024-02-04" && x.data.values["kw.P6"] == null).every((x) => !("customerKind" in x.data.values) && x.data.values.periodTo === "2026-10-19"), "titular identificat: no es demana ni s'envia el tipus de client; el període llegit es confirma");
+const tv = ops.filter((x) => x.op === "confirm").map((x) => x.data.values).find((x) => x["kw.P6"] != null);
+ok(tv && tv["kw.P6"] === 45 && tv["kwh.P6"] === 1200 && tv["energyPrice.P6"] === 0.11 && tv["powerPrice.P6"] === 0.005 && tv.promoKwh === null && !("customerKind" in tv), "3.0TD · la confirmació envia els sis períodes d'energia, potència i preus");
 const sessions = ops.filter((x) => x.op === "session");
 ok(sessions.filter((x) => x.data.consents.sips_titular === true).length === 1 && sessions.filter((x) => x.data.consents.sips_titular === false).length === sessions.length - 1, "sips · l'autorització només s'envia quan el visitant la marca");
 ok(ops.every((x) => !/"cups"/i.test(JSON.stringify(x.data))), "sips · el navegador no envia mai cap CUPS");
@@ -238,12 +272,12 @@ ok(pv && pv.promoKwh === 212.72 && pv.promoPrice === 0.1349 && pv.restKwh === 36
 ok(sess && !("turnstileToken" in sess.data) && sess.data.turnstile === "verificat", "Turnstile validat al servidor de la web i no reenviat");
 ok(sess.data.ref === "col. c34" && sess.data.utm?.source === "prova", "codi de col·laborador històric i UTM reenviats");
 ok(sess.data.consents.privacitat_servei === true && sess.data.consents.factura_temporal === true && sess.data.consentVersion === "2026-11-sev1", "consentiments i versió enviats");
-const confirms = ops.filter((x) => x.op === "confirm" && x.data.values.promoKwh == null && x.data.values.periodTo !== "2024-02-04");
+const confirms = ops.filter((x) => x.op === "confirm" && x.data.values.promoKwh == null && x.data.values.periodTo !== "2024-02-04" && x.data.values["kw.P6"] == null);
 ok(confirms.every((x) => x.data.values.promoKwh === null && x.data.values["energyPrice.P1"] === 0.24), "per franges · s'envien P1–P3 i cap franja comercial");
 ok(confirms.length === 4 && confirms.every((x) => x.data.values.annualKwh === 2253 && x.data.values["kwh.P1"] === 80), "la confirmació envia tots els valors, inclòs el consum anual");
 const lead = ops.find((x) => x.op === "lead");
 ok(lead && lead.data.phone === "600111222" && lead.data.acceptCommercial === false && /^[0-9a-f-]{36}$/.test(lead.data.idempotencyKey), "lead: telèfon, clau d'idempotència i consentiment");
-ok(log.filter((x) => x.op === "upload").length === 6, "la factura es puja directament a l'URL signada");
+ok(log.filter((x) => x.op === "upload").length === 7, "la factura es puja directament a l'URL signada");
 
 await browser.close();
 stop();
