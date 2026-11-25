@@ -145,21 +145,26 @@ export function LiveUpload({ t, locale }: { t: Dictionary; locale: Locale }) {
   if (phase.k === "outcome") {
     const o = phase.st.outcome!;
     return (
-      <div className="s-live s-live__panel">
-        {o.kind === "resultat" ? <Result t={t} o={o} headRef={headRef} locale={locale} /> : (
-          <div className="s-live__advisor">
-            <h3 ref={headRef} tabIndex={-1}>{L.advisorTitle}</h3>
-            <p>{L.advisor[o.reason] ?? L.advisor.dades_insuficients}</p>
-          </div>
+      <div className="s-live s-live__panel" data-wide={o.kind === "resultat" || undefined}>
+        {o.kind === "resultat" ? (
+          <Result t={t} o={o} headRef={headRef} locale={locale} cta={
+            <div className="s-res__cta">
+              {sess ? <button type="button" className="s-btn s-btn--primary s-res__btn" onClick={() => setPhase({ k: "contact", st: phase.st })}>{L.wantOffer}</button> : <a href="#contacte" className="s-btn s-btn--primary s-res__btn">{L.wantOffer}</a>}
+              <p className="s-res__cta-note">{L.ctaNote}</p>
+            </div>
+          } />
+        ) : (
+          <>
+            <div className="s-live__advisor">
+              <h3 ref={headRef} tabIndex={-1}>{L.advisorTitle}</h3>
+              <p>{L.advisor[o.reason] ?? L.advisor.dades_insuficients}</p>
+            </div>
+            <div className="s-row">
+              {sess ? <button type="button" className="s-btn s-btn--primary" onClick={() => setPhase({ k: "contact", st: phase.st })}>{L.talk}</button> : <a href="#contacte" className="s-btn s-btn--primary">{L.talk}</a>}
+            </div>
+          </>
         )}
-        <div className="s-row">
-          {sess ? (
-            <button type="button" className="s-btn s-btn--primary" onClick={() => setPhase({ k: "contact", st: phase.st })}>{o.kind === "resultat" ? L.wantOffer : L.talk}</button>
-          ) : (
-            <a href="#contacte" className="s-btn s-btn--primary">{L.talk}</a>
-          )}
-          <button type="button" className="s-textbtn" onClick={reset}>{L.again}</button>
-        </div>
+        <button type="button" className="s-textbtn s-live__again" onClick={reset}>{L.again}</button>
       </div>
     );
   }
@@ -221,35 +226,92 @@ function Confirm({ t, st, session, onDone, onError, headRef }: { t: Dictionary; 
 }
 
 /* ------------------------------------------------------------------ resultat */
-function Result({ t, o, headRef, locale }: { t: Dictionary; o: Extract<Outcome, { kind: "resultat" }>; headRef: React.RefObject<HTMLHeadingElement | null>; locale: Locale }) {
+/** Comptador: de 0 al valor en ~0,9 s amb desacceleració. Amb moviment reduït (o sense JS d'animació) mostra el valor final. */
+function useCountUp(target: number, ms = 900) {
+  const [v, setV] = useState(target);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || target <= 0) return;
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - t0) / ms);
+      setV(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, ms]);
+  return v;
+}
+
+/** «Permanència: 12 mesos» → «12 mesos» (l'etiqueta ja la posa la targeta). */
+const stripLabel = (s: string) => s.replace(/^\s*perman[eè]n[cs]ia\s*:\s*/i, "").trim();
+
+function Result({ t, o, headRef, locale, cta }: { t: Dictionary; o: Extract<Outcome, { kind: "resultat" }>; headRef: React.RefObject<HTMLHeadingElement | null>; locale: Locale; cta: React.ReactNode }) {
   const L = t.savenergy.live;
   const tag = locale === "es" ? "es-ES" : "ca-ES";
   const eur = (n: number) => n.toLocaleString(tag, { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+  const pct = (n: number) => `${n.toLocaleString(tag, { maximumFractionDigits: 1 })} %`;
+  const best = o.alternatives[0];
+  const counted = useCountUp(Math.round(best.saving));
+  const estimate = o.basis === "anualitzat";
   return (
     <div className="s-live__result">
-      <div className="s-live__head">
-        <h3 ref={headRef} tabIndex={-1}>{L.resultTitle}</h3>
-        {o.basis === "anualitzat" ? <span className="s-sim">{L.orientative}</span> : null}
-      </div>
-      <p className="s-live__current">{L.currentCost}: <b>{eur(o.current.annualCost)}</b><span>{L.perYear}</span></p>
-      <ol className="s-live__alts">
-        {o.alternatives.map((a) => (
-          <li key={a.rank} className="s-live__alt">
-            <div className="s-live__alt-head">
-              <span className="s-live__alt-name">{a.label}{a.product ? ` · ${a.product}` : ""}</span>
-              <span className="s-live__alt-type">{L.contract[a.contractType] ?? a.contractType}</span>
-            </div>
-            <p className="s-live__saving"><span>{L.saving}</span> <b>{eur(a.saving)}</b>{L.perYear} · <b>{eur(a.savingMonthly)}</b>{L.perMonth} · <b>{a.savingPct.toLocaleString(tag, { maximumFractionDigits: 1 })}&nbsp;%</b></p>
-            <p className="s-live__cost">{L.newCost}: <span className="s-measure">{eur(a.annualCost)}</span>{L.perYear} (<span className="s-measure">{eur(a.monthlyCost)}</span>{L.perMonth})</p>
-            <ul className="s-live__conds">
-              <li>{L.permanence}: {a.permanence}</li>
-              {a.priceGuaranteeMonths ? <li>{L.guarantee.replace("{m}", String(a.priceGuaranteeMonths))}</li> : null}
-              {a.conditions.map((c) => <li key={c}>{c}</li>)}
-            </ul>
-          </li>
-        ))}
+      <section className="s-res" aria-labelledby="s-res-title">
+        <div className="s-res__top">
+          <h3 id="s-res-title" ref={headRef} tabIndex={-1} className="s-res__kicker">{L.heroTitle}</h3>
+          {estimate ? <span className="s-res__tag">{L.orientative}</span> : null}
+        </div>
+        <p className="s-res__figure">
+          <span className="s-res__num" aria-hidden="true">{eur(counted)}</span>
+          <span className="sr-only">{eur(best.saving)}</span>
+          <span className="s-res__unit">{L.heroSaving}</span>
+        </p>
+        <ul className="s-res__facts">
+          <li><b>{eur(best.savingMonthly)}</b> {L.lessPerMonth}</li>
+          <li><b>{pct(best.savingPct)}</b> {L.pctSaving}</li>
+        </ul>
+        <dl className="s-res__costs">
+          <div><dt>{L.currentCostShort}</dt><dd>{eur(o.current.annualCost)}{L.perYear}</dd></div>
+          <div><dt>{L.newCostShort}</dt><dd>{eur(best.annualCost)}{L.perYear}</dd></div>
+        </dl>
+      </section>
+
+      <ol className="s-offers" aria-label={L.offersLabel}>
+        {o.alternatives.map((a, i) => {
+          const ratio = Math.max(4, Math.min(100, (a.annualCost / o.current.annualCost) * 100));
+          const guarantee = a.priceGuaranteeMonths ? L.months.replace("{m}", String(a.priceGuaranteeMonths)) : L.notStated;
+          // condicions secundàries: sense repetir la garantia de preu ni la permanència que ja són a la targeta
+          const extra = [...new Set(a.conditions)].filter((c) => !/garanti/i.test(c) && !/^\s*perman/i.test(c));
+          return (
+            <li key={a.rank} className="s-offer" data-best={i === 0 || undefined}>
+              {i === 0 ? <span className="s-offer__badge">{L.bestBadge}</span> : null}
+              <p className="s-offer__name">{a.label}{a.product ? <span> · {a.product}</span> : null}</p>
+              <p className="s-offer__saving"><b>{eur(a.saving)}</b><span>{L.savingPerYear}</span></p>
+              <p className="s-offer__sub"><span>{eur(a.savingMonthly)} {L.lessPerMonth}</span><span className="s-offer__pct">−{pct(a.savingPct)}</span></p>
+              <div className="s-offer__bars" role="img" aria-label={`${L.currentCostShort}: ${eur(o.current.annualCost)}${L.perYear}. ${L.newCostShort}: ${eur(a.annualCost)}${L.perYear}.`}>
+                <div className="s-offer__bar"><span>{L.barNow}</span><i style={{ width: "100%" }} /><em>{eur(o.current.annualCost)}</em></div>
+                <div className="s-offer__bar" data-new><span>{L.barNew}</span><i style={{ width: `${ratio}%` }} /><em>{eur(a.annualCost)}</em></div>
+              </div>
+              <p className="s-offer__cost">{L.newCost}: <b>{eur(a.annualCost)}</b>{L.perYear} · {eur(a.monthlyCost)}{L.perMonth}</p>
+              <dl className="s-offer__facts">
+                <div><dt>{L.tariffType}</dt><dd>{L.contract[a.contractType] ?? a.contractType}</dd></div>
+                <div><dt>{L.permanence}</dt><dd>{stripLabel(a.permanence)}</dd></div>
+                <div><dt>{L.priceGuarantee}</dt><dd>{guarantee}</dd></div>
+              </dl>
+              {extra.length ? (
+                <details className="s-offer__more">
+                  <summary>{L.seeConditions}</summary>
+                  <ul>{extra.map((c) => <li key={c}>{c}</li>)}</ul>
+                </details>
+              ) : null}
+            </li>
+          );
+        })}
       </ol>
-      {o.basis === "anualitzat" ? <p className="s-live__note">{L.orientativeText}</p> : null}
+
+      {cta}
+      {estimate ? <p className="s-live__note s-live__note--key">{L.orientativeText}</p> : null}
       {o.supplierDisplay === "anonim" ? <p className="s-live__note">{L.anonNote}</p> : null}
       {o.hypotheses.length ? (
         <details className="s-live__hyp"><summary>{L.hypotheses}</summary><ul>{o.hypotheses.map((h) => <li key={h}>{h}</li>)}</ul></details>

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "e2e:savenergy": "NEXT_PUBLIC_SAVENERGY_ENABLED=true NEXT_PUBLIC_TURNSTILE_SITE_KEY=0x4AAAAAAATESTKEY next build && node e2e/savenergy/run.mjs"
   },
   "dependencies": {
     "@fontsource-variable/anybody": "^5.3.0",
