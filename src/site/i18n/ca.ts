@@ -136,6 +136,14 @@ const ca = {
         tag: "Factura antiga",
       },
       variable: { tag: "Tarifa indexada", note: "El teu cost actual és variable: l'hem estimat amb els preus d'aquesta factura, que canvien cada mes amb el mercat. Les ofertes de preu fix no varien." },
+      sips: {
+        consent: "Soc el titular del subministrament (o hi estic autoritzat) i autoritzo la consulta dels meus consums al SIPS només per a aquesta comparativa.",
+        optional: "Opcional: amb el teu consum anual real, la comparativa és més precisa.",
+        ok: "Hem obtingut el teu consum anual real del SIPS: {kwh} kWh ({from} – {to}). El farem servir en lloc d'estimar-lo a partir d'una sola factura.",
+        total: "Hem obtingut el teu consum anual del SIPS: {kwh} kWh. El repartiment per franges l'estimarem amb aquesta factura.",
+        fallback: "No hem pogut fer servir les dades del SIPS (no disponibles, incompletes o antigues). Calcularem una comparativa orientativa amb el consum d'aquesta factura.",
+        source: { title: "Origen dels consums", sips: "Consum anual real del SIPS", sips_total: "Total anual del SIPS; repartiment estimat amb la factura", factura_anual: "Consum anual indicat a la factura", factura_anualitzada: "Estimació a partir d'una sola factura" } as Record<string, string>,
+      },
       mode: {
         label: "Com et facturen l'energia",
         hint: "L'hem detectat a la teva factura. Canvia-ho només si no és correcte.",

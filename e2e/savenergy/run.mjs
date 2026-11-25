@@ -49,7 +49,7 @@ for (const [lang, opts, tag] of [["", { viewport: { width: 1440, height: 900 } }
   const panel = p.locator(".s-live").first();
   await panel.locator(".s-btn--primary").click();
   ok((await panel.locator("[role=alert]").count()) > 0, `${tag} · calen els consentiments abans de triar la factura`);
-  for (const cb of await panel.locator("input[type=checkbox]").all()) await cb.check();
+  for (const cb of await panel.locator(".s-check:not([data-sips-consent]) input[type=checkbox]").all()) await cb.check();
   await panel.locator("input[type=file]").setInputFiles(PDF);
   await p.waitForSelector(".s-live__grid", { timeout: 15000 });
 
@@ -122,7 +122,7 @@ for (const [lang, opts, tag] of [["", { viewport: { width: 1440, height: 900 } }
   await p.goto(`http://localhost:${WEB}/`, { waitUntil: "networkidle" });
   await p.evaluate(() => window.dispatchEvent(new CustomEvent("a30:savenergy-mode", { detail: "upload" })));
   const panel = p.locator(".s-live").first();
-  for (const cb of await panel.locator("input[type=checkbox]").all()) await cb.check();
+  for (const cb of await panel.locator(".s-check:not([data-sips-consent]) input[type=checkbox]").all()) await cb.check();
   await panel.locator("input[type=file]").setInputFiles(PDF);
   await p.waitForSelector(".s-live__grid", { timeout: 15000 });
   await p.locator(".s-live__panel button[type=submit]").click();
@@ -141,7 +141,7 @@ for (const [lang, opts, tag] of [["", { viewport: { width: 1440, height: 900 } }
   await p.goto(`http://localhost:${WEB}/?utm_source=promo`, { waitUntil: "networkidle" });
   await p.evaluate(() => window.dispatchEvent(new CustomEvent("a30:savenergy-mode", { detail: "upload" })));
   const panel = p.locator(".s-live").first();
-  for (const cb of await panel.locator("input[type=checkbox]").all()) await cb.check();
+  for (const cb of await panel.locator(".s-check:not([data-sips-consent]) input[type=checkbox]").all()) await cb.check();
   await panel.locator("input[type=file]").setInputFiles(PDF);
   await p.waitForSelector(".s-live__grid", { timeout: 15000 });
   const ids = () => p.locator(".s-live__grid input").evaluateAll((els) => els.map((e) => e.id.replace("sev-", "")));
@@ -170,6 +170,31 @@ for (const [lang, opts, tag] of [["", { viewport: { width: 1440, height: 900 } }
   await ctx.close();
 }
 
+// SIPS amb autorització expressa: casella opcional i desmarcada; amb l'autorització, el resultat indica l'origen dels consums
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const p = await ctx.newPage();
+  const errs = []; p.on("pageerror", (e) => errs.push(e.message));
+  await p.route("https://challenges.cloudflare.com/**", (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: TURNSTILE }));
+  await p.addInitScript(() => localStorage.setItem("a30.consent.v1", JSON.stringify({ v: 1, analytics: false, at: "x" })));
+  await p.goto(`http://localhost:${WEB}/?utm_source=sips`, { waitUntil: "networkidle" });
+  await p.evaluate(() => window.dispatchEvent(new CustomEvent("a30:savenergy-mode", { detail: "upload" })));
+  const panel = p.locator(".s-live").first();
+  await p.waitForSelector("[data-sips-consent]");
+  const box = panel.locator("[data-sips-consent] input");
+  ok(!(await box.isChecked()) && /autoritzo la consulta dels meus consums al SIPS/.test(await panel.locator("[data-sips-consent]").innerText()), "sips · autorització expressa, opcional i desmarcada per defecte");
+  for (const cb of await panel.locator("input[type=checkbox]").all()) await cb.check();
+  await panel.locator("input[type=file]").setInputFiles(PDF);
+  await p.waitForSelector(".s-live__grid", { timeout: 15000 });
+  ok((await p.locator('[data-sips="ok"]').count()) === 1 && /3\.?420 kWh \(01\/11\/2025 – 31\/10\/2026\)/.test(await p.locator("[data-sips]").innerText()), "sips · el formulari informa del consum anual real obtingut");
+  ok(!/ES\d{16}/.test(await p.locator(".s-live__panel").innerText()), "sips · el CUPS complet no es mostra mai");
+  await p.locator(".s-live__panel button[type=submit]").click();
+  await p.waitForSelector(".s-res__num");
+  ok((await p.locator('[data-consumption="sips"]').count()) === 1 && /Origen dels consums: Consum anual real del SIPS \(01\/11\/2025 – 31\/10\/2026\)/.test(await p.locator("[data-consumption]").innerText()), "sips · el resultat mostra l'origen dels consums");
+  ok(errs.length === 0, `sips · sense errors de pàgina ${errs.join("|")}`);
+  await ctx.close();
+}
+
 // factura antiga i indexada, amb titular dubtós: es mostra el període per corregir-lo i el resultat és només orientatiu
 {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
@@ -180,7 +205,7 @@ for (const [lang, opts, tag] of [["", { viewport: { width: 1440, height: 900 } }
   await p.goto(`http://localhost:${WEB}/?utm_source=antiga`, { waitUntil: "networkidle" });
   await p.evaluate(() => window.dispatchEvent(new CustomEvent("a30:savenergy-mode", { detail: "upload" })));
   const panel = p.locator(".s-live").first();
-  for (const cb of await panel.locator("input[type=checkbox]").all()) await cb.check();
+  for (const cb of await panel.locator(".s-check:not([data-sips-consent]) input[type=checkbox]").all()) await cb.check();
   await panel.locator("input[type=file]").setInputFiles(PDF);
   await p.waitForSelector(".s-live__grid", { timeout: 15000 });
   ok((await p.locator('[data-notice="factura_antiga"]').count()) === 1 && /antiga/.test(await p.locator("[data-notice]").innerText()), "antiga · avís de factura antiga abans de comparar (no es bloqueja)");
@@ -205,6 +230,9 @@ const sess = ops.find((x) => x.op === "session");
 const ov = ops.filter((x) => x.op === "confirm").map((x) => x.data.values).find((x) => x.periodTo === "2024-02-04");
 ok(ov && ov.periodFrom === "2024-01-05" && ov.customerKind === "particular" && ov.serviceFeeEur === 5.01, "antiga · la confirmació envia el període, el tipus de client confirmat i el servei");
 ok(ops.filter((x) => x.op === "confirm" && x.data.values.periodTo !== "2024-02-04").every((x) => !("customerKind" in x.data.values) && x.data.values.periodTo === "2026-10-19"), "titular identificat: no es demana ni s'envia el tipus de client; el període llegit es confirma");
+const sessions = ops.filter((x) => x.op === "session");
+ok(sessions.filter((x) => x.data.consents.sips_titular === true).length === 1 && sessions.filter((x) => x.data.consents.sips_titular === false).length === sessions.length - 1, "sips · l'autorització només s'envia quan el visitant la marca");
+ok(ops.every((x) => !/"cups"/i.test(JSON.stringify(x.data))), "sips · el navegador no envia mai cap CUPS");
 const pv = ops.filter((x) => x.op === "confirm").map((x) => x.data.values).find((x) => x.promoKwh != null);
 ok(pv && pv.promoKwh === 212.72 && pv.promoPrice === 0.1349 && pv.restKwh === 369.48 && pv.restPrice === 0.26371 && pv["energyPrice.P1"] === null && pv["energyPrice.P3"] === null, "promo · la confirmació envia les franges comercials i cap preu assignat a P1–P3");
 ok(sess && !("turnstileToken" in sess.data) && sess.data.turnstile === "verificat", "Turnstile validat al servidor de la web i no reenviat");
@@ -212,10 +240,10 @@ ok(sess.data.ref === "col. c34" && sess.data.utm?.source === "prova", "codi de c
 ok(sess.data.consents.privacitat_servei === true && sess.data.consents.factura_temporal === true && sess.data.consentVersion === "2026-11-sev1", "consentiments i versió enviats");
 const confirms = ops.filter((x) => x.op === "confirm" && x.data.values.promoKwh == null && x.data.values.periodTo !== "2024-02-04");
 ok(confirms.every((x) => x.data.values.promoKwh === null && x.data.values["energyPrice.P1"] === 0.24), "per franges · s'envien P1–P3 i cap franja comercial");
-ok(confirms.length === 3 && confirms.every((x) => x.data.values.annualKwh === 2253 && x.data.values["kwh.P1"] === 80), "la confirmació envia tots els valors, inclòs el consum anual");
+ok(confirms.length === 4 && confirms.every((x) => x.data.values.annualKwh === 2253 && x.data.values["kwh.P1"] === 80), "la confirmació envia tots els valors, inclòs el consum anual");
 const lead = ops.find((x) => x.op === "lead");
 ok(lead && lead.data.phone === "600111222" && lead.data.acceptCommercial === false && /^[0-9a-f-]{36}$/.test(lead.data.idempotencyKey), "lead: telèfon, clau d'idempotència i consentiment");
-ok(log.filter((x) => x.op === "upload").length === 5, "la factura es puja directament a l'URL signada");
+ok(log.filter((x) => x.op === "upload").length === 6, "la factura es puja directament a l'URL signada");
 
 await browser.close();
 stop();

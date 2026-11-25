@@ -137,6 +137,14 @@ const es: Dictionary = {
         tag: "Factura antigua",
       },
       variable: { tag: "Tarifa indexada", note: "Tu coste actual es variable: lo hemos estimado con los precios de esta factura, que cambian cada mes con el mercado. Las ofertas de precio fijo no varían." },
+      sips: {
+        consent: "Soy el titular del suministro (o estoy autorizado) y autorizo la consulta de mis consumos en el SIPS solo para esta comparativa.",
+        optional: "Opcional: con tu consumo anual real, la comparativa es más precisa.",
+        ok: "Hemos obtenido tu consumo anual real del SIPS: {kwh} kWh ({from} – {to}). Lo usaremos en lugar de estimarlo a partir de una sola factura.",
+        total: "Hemos obtenido tu consumo anual del SIPS: {kwh} kWh. El reparto por franjas lo estimaremos con esta factura.",
+        fallback: "No hemos podido usar los datos del SIPS (no disponibles, incompletos o antiguos). Calcularemos una comparativa orientativa con el consumo de esta factura.",
+        source: { title: "Origen de los consumos", sips: "Consumo anual real del SIPS", sips_total: "Total anual del SIPS; reparto estimado con la factura", factura_anual: "Consumo anual indicado en la factura", factura_anualitzada: "Estimación a partir de una sola factura" } as Record<string, string>,
+      },
       mode: {
         label: "Cómo te facturan la energía",
         hint: "Lo hemos detectado en tu factura. Cámbialo solo si no es correcto.",

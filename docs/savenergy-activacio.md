@@ -6,6 +6,19 @@ Estat: **desenvolupat, apagat**. El comparador real només funciona quan es comp
    - `min_invoice_days` (20) i `max_invoice_age_months` (12): una factura massa curta o massa antiga no mostra cap estalvi anual i es deriva a un assessor;
    - `ai_fallback` (`essencials`): quan es recorre a la IA després de l'extracció directa del PDF i la validació de coherència — `mai`, `essencials` (falten dades imprescindibles) o `contradiccions` (també si la lectura és completa però incoherent). Sempre amb `ai_enabled` actiu i dins dels límits de `sev_reserve_ai`; amb la IA desactivada no es fa mai cap crida.
    Si la base de dades de proves ja es va inicialitzar amb la 067, n'hi ha prou d'executar-hi el fitxer `068_savenergy_fiabilitat.sql`.
+   I `069_savenergy_sips.sql` (consulta SIPS des de la web; tampoc activa res): afegeix `sips_per_session` (1), `sips_retries` (1) i `sips_max_age_months` (6) a `sev_settings`, la taula `sev_sips_calls` (recompte de consultes, sense cap CUPS) i les funcions de reserva atòmica `sev_reserve_sips` / `sev_settle_sips`.
+
+### Consulta SIPS (desactivada per defecte)
+
+Calen **totes** aquestes condicions perquè es faci una consulta: `sips_enabled` activat al panell, límits superiors a zero (`sips_daily_max` és 0 per defecte), la variable de servidor del CRM `SAVENERGY_SIPS_MODE` i l'autorització expressa del visitant (casella opcional, desmarcada per defecte).
+
+| `SAVENERGY_SIPS_MODE` | Efecte |
+|---|---|
+| (sense valor) o `off` | No es consulta res. La web no mostra la casella d'autorització. |
+| `mock` | Respostes **simulades** amb dades fictícies, per validar el flux. Mai en producció (s'ignora si `VERCEL_ENV=production`). |
+| `real` | Portal SIPS del CRM (`SIPS_USER` / `SIPS_PASSWORD`). **No l'activis** fins que s'hagin validat els permisos del proveïdor i hi hagi credencials de proves. |
+
+Només es consulta el CUPS llegit de la factura al servidor: cap operació pública n'accepta cap. El visitant veu el consum anual i les dates, mai el CUPS complet ni la resposta del SIPS. Les potències contractades són sempre les de la factura.
 2. Variables configurades a la web i al CRM.
 3. `enabled = true` al panell «SavEnergy IA (web)» del CRM.
 4. `NEXT_PUBLIC_SAVENERGY_ENABLED=true` a la web.

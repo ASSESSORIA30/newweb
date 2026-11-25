@@ -31,6 +31,9 @@ const oldFields = [
   { key: "priceMode", value: "indexat", unit: null, status: "llegit" }, { key: "serviceFeeEur", value: 5.01, unit: "€", status: "llegit" },
 ];
 const oldSessions = new Set();
+// Escenari «SIPS» (sessions obertes amb l'autorització del titular): consum anual real SIMULAT; mai el CUPS complet.
+const sipsSessions = new Set();
+const sipsInfo = { status: "ok", annualKwh: 3420, periods: [980, 870, 1570], from: "2025-11-01", to: "2026-10-31" };
 const state = (status, extra = {}) => ({ status, readStatus: "ok", cupsMasked: "ES••••••••••••5678JN", fields, missing: [], missingPrices: [], toConfirm: fields.filter((f) => f.status === "per_revisar").map((f) => f.key), outcome: null, contactRequested: false, ...extra });
 const outcome = { kind: "resultat", asOf: "2026-11-25", current: { annualCost: 1079.09, monthlyCost: 89.92 }, basis: "anualitzat", supplierDisplay: "anonim", hypotheses: ["Consum anualitzat a partir d'una factura de 30 dies (×12.17); no té en compte l'estacionalitat."],
   alternatives: [{ rank: 1, label: "Comercialitzadora A", product: null, contractType: "periodes", permanence: "Sense permanència", priceGuaranteeMonths: 12, conditions: ["Preus diferents per franges horàries", "Preu garantit 12 mesos", "Oferta vigent fins al 2027-06-30"], annualCost: 715.13, monthlyCost: 59.59, saving: 363.96, savingMonthly: 30.33, savingPct: 33.73, validTo: "2027-06-30" },
@@ -56,13 +59,14 @@ http.createServer((req, res) => {
     const data = body ? JSON.parse(body) : {};
     log.push({ op: m[1], sigOk: true, ip: req.headers["x-a30-client-ip"], data });
     const old = oldSessions.has(data.session);
-    const promo = promoSessions.has(data.session) ? { fields: promoFields, toConfirm: [] } : old ? { fields: oldFields, toConfirm: ["customerKind"], notice: "factura_antiga" } : {};
-    if (m[1] === "session") { const id = randomUUID(); if (data.utm?.source === "promo") promoSessions.add(id); if (data.utm?.source === "antiga") oldSessions.add(id); return send(200, { session: id, access: "A".repeat(43), expiresAt: new Date(Date.now() + 864e5).toISOString(), maxBytes: 8388608, upload: { url: `http://localhost:${PORT}/upload/${randomUUID()}`, method: "PUT", headers: { "content-type": data.mime, "x-upsert": "false" } } }); }
+    const sipsOn = sipsSessions.has(data.session);
+    const promo = sipsOn ? { sips: sipsInfo } : promoSessions.has(data.session) ? { fields: promoFields, toConfirm: [] } : old ? { fields: oldFields, toConfirm: ["customerKind"], notice: "factura_antiga" } : {};
+    if (m[1] === "session") { const id = randomUUID(); if (data.utm?.source === "promo") promoSessions.add(id); if (data.utm?.source === "antiga") oldSessions.add(id); if (data.consents?.sips_titular === true && data.utm?.source === "sips") sipsSessions.add(id); return send(200, { session: id, access: "A".repeat(43), expiresAt: new Date(Date.now() + 864e5).toISOString(), maxBytes: 8388608, upload: { url: `http://localhost:${PORT}/upload/${randomUUID()}`, method: "PUT", headers: { "content-type": data.mime, "x-upsert": "false" } } }); }
     if (m[1] === "analyse") return send(200, state("analitzant"));
     if (m[1] === "status") { polls += 1; return send(200, polls < 2 ? state("analitzant") : state("llegida", promo)); }
-    if (m[1] === "confirm") return send(200, state("resultat", { ...promo, notice: null, outcome: old ? { ...outcome, stale: { periodTo: data.values.periodTo }, variable: true } : outcome, toConfirm: [] }));
+    if (m[1] === "confirm") return send(200, state("resultat", { ...promo, notice: null, outcome: old ? { ...outcome, stale: { periodTo: data.values.periodTo }, variable: true } : sipsOn ? { ...outcome, basis: "anual", consumption: { kind: "sips", from: sipsInfo.from, to: sipsInfo.to } } : { ...outcome, consumption: { kind: "factura_anualitzada", from: null, to: null } }, toConfirm: [] }));
     if (m[1] === "lead") return send(200, { ok: true, reference: "ABCD1234" });
-    if (m[1] === "visit") return send(200, { ok: true });
+    if (m[1] === "visit") return send(200, { ok: true, sips: true });
     send(404, { error: "no_trobat" });
   });
 }).listen(PORT, () => console.log(`mock CRM :${PORT}`));

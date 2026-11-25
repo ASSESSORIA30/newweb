@@ -20,7 +20,8 @@ type Phase =
   | { k: "contact"; st: SessionState }
   | { k: "done" };
 
-let visitCounted = false;
+/** Una sola visita per sessió de navegador; la resposta diu si es pot oferir la consulta SIPS (servei activat al CRM). */
+let visitInfo: Promise<{ ok: true; sips?: boolean } | undefined> | null = null;
 const MAX_BYTES = 8 * 1024 * 1024;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PHONE = /^(\+34)?[6789]\d{8}$/;
@@ -28,7 +29,8 @@ const PHONE = /^(\+34)?[6789]\d{8}$/;
 export function LiveUpload({ t, locale }: { t: Dictionary; locale: Locale }) {
   const L = t.savenergy.live;
   const [phase, setPhase] = useState<Phase>({ k: "idle" });
-  const [consent, setConsent] = useState({ privacy: false, retention: false });
+  const [consent, setConsent] = useState({ privacy: false, retention: false, sips: false });
+  const [sipsOffered, setSipsOffered] = useState(false);
   const [consentErr, setConsentErr] = useState(false);
   const [sess, setSess] = useState<Session | null>(null);
   const started = useRef(0);
@@ -40,7 +42,10 @@ export function LiveUpload({ t, locale }: { t: Dictionary; locale: Locale }) {
 
   useEffect(() => {
     started.current = Date.now();
-    if (!visitCounted) { visitCounted = true; void api.visit(); }
+    visitInfo ??= api.visit();
+    let alive = true;
+    void visitInfo.then((v) => { if (alive && v?.sips) setSipsOffered(true); });
+    return () => { alive = false; };
   }, []);
   // en canviar de fase, el focus va al títol de la nova pantalla (lectors de pantalla i teclat)
   useEffect(() => { if (phase.k !== "idle" && phase.k !== "busy") headRef.current?.focus(); }, [phase.k]);
@@ -64,7 +69,7 @@ export function LiveUpload({ t, locale }: { t: Dictionary; locale: Locale }) {
       const last = a.last ?? a.first;
       const utm = Object.fromEntries(([["source", last?.utm_source], ["medium", last?.utm_medium], ["campaign", last?.utm_campaign], ["content", last?.utm_content], ["term", last?.utm_term]] as const).filter(([, v]) => v)) as Record<string, string>;
       const s = await api.open({
-        locale, turnstileToken: token, mime: prep.mime, bytes: prep.blob.size, consents: { privacitat_servei: true, factura_temporal: true },
+        locale, turnstileToken: token, mime: prep.mime, bytes: prep.blob.size, consents: { privacitat_servei: true, factura_temporal: true, sips_titular: sipsOffered && consent.sips },
         ref: last?.ref ?? a.first?.ref, utm: Object.keys(utm).length ? utm : undefined, startedAt: started.current, website: honey.current?.value ?? "",
       });
       setSess(s);
@@ -110,6 +115,12 @@ export function LiveUpload({ t, locale }: { t: Dictionary; locale: Locale }) {
                 <input type="checkbox" checked={consent.retention} onChange={(e) => { setConsent({ ...consent, retention: e.target.checked }); setConsentErr(false); }} />
                 <span>{L.consentRetention}</span>
               </label>
+              {sipsOffered ? (
+                <label className="s-check s-check--opt" data-sips-consent>
+                  <input type="checkbox" checked={consent.sips} onChange={(e) => setConsent({ ...consent, sips: e.target.checked })} />
+                  <span>{L.sips.consent} <span className="s-field__opt">{L.sips.optional}</span></span>
+                </label>
+              ) : null}
               {consentErr ? <p className="s-field__err" role="alert">{L.errConsent}</p> : null}
             </div>
             {phase.error ? <p className="s-field__err" role="alert">{phase.error}</p> : null}
@@ -254,6 +265,13 @@ function Confirm({ t, st, session, onDone, onError, headRef }: { t: Dictionary; 
         <span id="sev-priceMode-h" className="s-field__hint">{L.mode.hint}</span>
       </div>
       {L.mode.notes[mode] ? <p className="s-live__note" data-mode-note>{L.mode.notes[mode]}</p> : null}
+      {st.sips ? (
+        <p className="s-live__note" role="status" data-sips={st.sips.status}>
+          {(st.sips.status === "ok" ? L.sips.ok : st.sips.status === "total" ? L.sips.total : L.sips.fallback)
+            .replace("{kwh}", st.sips.annualKwh == null ? "—" : st.sips.annualKwh.toLocaleString("ca-ES"))
+            .replace("{from}", st.sips.from ? st.sips.from.split("-").reverse().join("/") : "—").replace("{to}", st.sips.to ? st.sips.to.split("-").reverse().join("/") : "—")}
+        </p>
+      ) : null}
       {st.notice && L.notice[st.notice] ? <p className="s-live__note s-live__note--warn" role="status" data-notice={st.notice}>{L.notice[st.notice]}</p> : null}
       <div className="s-live__grid">
         {(["periodFrom", "periodTo"] as const).map((k) => (
@@ -343,6 +361,11 @@ function Result({ t, o, headRef, locale, cta }: { t: Dictionary; o: Extract<Outc
           <div><dt>{L.newCostShort}</dt><dd>{eur(best.annualCost)}{L.perYear}</dd></div>
         </dl>
         {o.variable ? <p className="s-res__variable" data-variable>{L.variable.note}</p> : null}
+        {o.consumption && L.sips.source[o.consumption.kind] ? (
+          <p className="s-res__variable" data-consumption={o.consumption.kind}>
+            <b>{L.sips.source.title}:</b> {L.sips.source[o.consumption.kind]}{o.consumption.from && o.consumption.to ? ` (${o.consumption.from.split("-").reverse().join("/")} – ${o.consumption.to.split("-").reverse().join("/")})` : ""}.
+          </p>
+        ) : null}
       </section>
 
       <ol className="s-offers" aria-label={L.offersLabel}>

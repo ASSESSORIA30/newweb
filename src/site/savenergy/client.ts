@@ -8,9 +8,9 @@ export type PublicFieldKey = "accessTariff" | "customerKind" | "days" | "annualK
 export interface PublicField { key: PublicFieldKey; value: string | number | null; unit: string | null; status: "llegit" | "per_revisar" | "pendent" | "revisat" }
 export interface Alternative { rank: number; label: string; product: string | null; contractType: string; permanence: string; priceGuaranteeMonths: number | null; conditions: string[]; annualCost: number; monthlyCost: number; saving: number; savingMonthly: number; savingPct: number; validTo: string | null }
 export type Outcome =
-  | { kind: "resultat"; asOf: string; current: { annualCost: number; monthlyCost: number }; alternatives: Alternative[]; hypotheses: string[]; supplierDisplay: "anonim" | "nom"; basis: "anual" | "anualitzat"; stale?: { periodTo: string | null } | null; variable?: boolean }
+  | { kind: "resultat"; asOf: string; current: { annualCost: number; monthlyCost: number }; alternatives: Alternative[]; hypotheses: string[]; supplierDisplay: "anonim" | "nom"; basis: "anual" | "anualitzat"; stale?: { periodTo: string | null } | null; variable?: boolean; consumption?: { kind: string; from: string | null; to: string | null } | null }
   | { kind: "assessor"; reason: string; detail?: string | null; current?: { annualCost: number; monthlyCost: number } | null; hypotheses?: string[] };
-export interface SessionState { status: string; readStatus: string | null; cupsMasked: string | null; fields: PublicField[]; missing: string[]; missingPrices: string[]; toConfirm: string[]; notice?: "periode_curt" | "factura_antiga" | null; outcome: Outcome | null; contactRequested: boolean }
+export interface SessionState { status: string; readStatus: string | null; cupsMasked: string | null; fields: PublicField[]; missing: string[]; missingPrices: string[]; toConfirm: string[]; notice?: "periode_curt" | "factura_antiga" | null; sips?: { status: string; annualKwh: number | null; periods: number[] | null; from: string | null; to: string | null } | null; outcome: Outcome | null; contactRequested: boolean }
 
 export class SavError extends Error { constructor(public code: string, public status: number) { super(code); } }
 
@@ -28,13 +28,13 @@ async function post<T>(op: string, body: unknown): Promise<T> {
 
 export interface Session { session: string; access: string; expiresAt: string; maxBytes: number; upload: { url: string; method: string; headers: Record<string, string> } }
 export const api = {
-  open: (b: { locale: "ca" | "es"; turnstileToken: string; mime: string; bytes: number; consents: { privacitat_servei: true; factura_temporal: true }; ref?: string; utm?: Record<string, string>; startedAt: number; website: string }) =>
+  open: (b: { locale: "ca" | "es"; turnstileToken: string; mime: string; bytes: number; consents: { privacitat_servei: true; factura_temporal: true; sips_titular?: boolean }; ref?: string; utm?: Record<string, string>; startedAt: number; website: string }) =>
     post<Session>("session", { ...b, consentVersion: CONSENT_VERSION }),
   analyse: (s: Session) => post<SessionState>("analyse", { session: s.session, access: s.access }),
   status: (s: Session) => post<SessionState>("status", { session: s.session, access: s.access }),
   confirm: (s: Session, values: Record<string, number | string | null>) => post<SessionState>("confirm", { session: s.session, access: s.access, values }),
   lead: (s: Session, c: { idempotencyKey: string; name: string; phone: string; email: string; acceptCommercial: boolean; website: string }) => post<{ ok: true; reference?: string; duplicate?: boolean }>("lead", { session: s.session, access: s.access, ...c }),
-  visit: () => post<{ ok: true }>("visit", {}).catch(() => undefined),
+  visit: () => post<{ ok: true; sips?: boolean }>("visit", {}).catch(() => undefined),
 };
 
 /** Puja el fitxer a l'URL signada (PUT directe a l'emmagatzematge privat; no passa per cap funció de la web). */
