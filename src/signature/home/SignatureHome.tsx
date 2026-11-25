@@ -7,6 +7,7 @@ import { JsonLd } from "@/site/seo/JsonLd";
 import { Footer } from "@/site/home/Footer";
 import { Audiences } from "@/site/home/Audiences";
 import { Process } from "@/site/home/Process";
+import { SigPeople } from "./SigPeople";
 import { Value } from "@/site/home/Value";
 import { Partners } from "@/site/home/Partners";
 import { SigTrust } from "./SigTrust";
@@ -46,6 +47,7 @@ export function SignatureHome({ locale }: { locale: Locale }) {
             <div>
               <Audiences t={t} />
               <Process t={t} />
+              <SigPeople t={t} />
             </div>
           </SigReveal>
         </div>
@@ -67,8 +69,8 @@ export function SignatureHome({ locale }: { locale: Locale }) {
         <div className="g-chapter" style={{ "--g-prev": "var(--surface)" } as React.CSSProperties}>
           <SigReveal tone="night">
             <div>
-              <Collaborators t={t} locale={locale} />
               <Close t={t} locale={locale} />
+              <Collaborators t={t} locale={locale} />
             </div>
           </SigReveal>
         </div>

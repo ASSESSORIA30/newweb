@@ -345,6 +345,15 @@ const ca = {
     always: "Sempre actives",
     settings: "Configura les cookies",
   },
+  people: {
+    kicker: "Tecnologia amb tracte humà",
+    title: "Més enllà de l’energia, hi ha persones.",
+    text: "Som una assessoria de proximitat amb seu a Lleida. Combinem la tecnologia més avançada amb l’atenció personalitzada que mereixen els nostres clients. Perquè darrere de cada factura hi ha una persona, una família o un negoci.",
+    caption: "Oficina central · Lleida",
+    cta: "Vine a conèixer-nos",
+    aiNote: "Imatge de les nostres instal·lacions retocada amb IA. Les persones són una recreació il·lustrativa, no membres reals de l’equip.",
+    alt: "Recepció de l’oficina central d’Assessoria 3.0 a Lleida, amb el logotip a la paret i una recreació de persones ateses als escriptoris.",
+  },
   legalPage: {
     back: "Tornar a l’inici",
     source: "Text vigent publicat a la web actual d’Assessoria 3.0.",

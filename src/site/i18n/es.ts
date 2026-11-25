@@ -346,6 +346,15 @@ const es: Dictionary = {
     always: "Siempre activas",
     settings: "Configurar cookies",
   },
+  people: {
+    kicker: "Tecnología con trato humano",
+    title: "Más allá de la energía, hay personas.",
+    text: "Somos una asesoría de proximidad con sede en Lleida. Combinamos la tecnología más avanzada con la atención personalizada que merecen nuestros clientes. Porque detrás de cada factura hay una persona, una familia o un negocio.",
+    caption: "Oficina central · Lleida",
+    cta: "Ven a conocernos",
+    aiNote: "Imagen de nuestras instalaciones retocada con IA. Las personas son una recreación ilustrativa, no miembros reales del equipo.",
+    alt: "Recepción de la oficina central de Assessoria 3.0 en Lleida, con el logotipo en la pared y una recreación de personas atendidas en los escritorios.",
+  },
   legalPage: {
     back: "Volver al inicio",
     source: "Texto vigente publicado en la web actual de Assessoria 3.0.",

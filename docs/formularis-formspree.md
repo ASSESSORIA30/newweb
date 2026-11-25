@@ -13,6 +13,8 @@
 | Parla amb un assessor (trucada) | `web-assessorament` |
 | Col·laboradors | `web-collaborador` |
 
+Cada enviament inclou també `formulari`: `formulari-contacte-general`, `formulari-collaboradors` o `formulari-trucada-assessor` (i la línia «Formulari: …» dins de `message`, que és la que conserva el CRM).
+
 ## Ordre i camps (comprovat amb una còpia del lector `renovaciosC/src/core/lead-mail.ts`, sense modificar-lo)
 
 1. Metadades primer: `origen`, `idioma`, `pagina_origen`, `tipus_client`, `codi_collaborador`, `utm_*`, `data_consulta`, `consentiment_privacitat`, `consentiment_comercial`. El lector del CRM **no les desa com a camps** (no són etiquetes reconegudes; `idioma` s'ignora explícitament), però surten al correu i a Formspree.

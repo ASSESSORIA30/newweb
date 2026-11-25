@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { Dictionary } from "../i18n/ca";
 import { track } from "../lead/tracking";
 
@@ -52,19 +52,41 @@ function Diagram({ who }: { who: Who }) {
 
 export function Audiences({ t }: { t: Dictionary }) {
   const [who, setWho] = useState<Who>("home");
-  // Keyboard-initiated switches are instant (no slide, no panel entrance).
+  // Keyboard-initiated switches are instant (no slide, no content transition).
   const [instant, setInstant] = useState(false);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
+  const bar = useRef<HTMLDivElement>(null);
   const a = t.audiences;
-  const data = who === "home" ? a.home : a.business;
   const order: Who[] = ["home", "business"];
 
+  // The underline follows the active label: measured, then moved with transform only.
+  useLayoutEffect(() => {
+    const place = () => {
+      const el = tabs.current[order.indexOf(who)];
+      if (!el || !bar.current) return;
+      bar.current.style.setProperty("--ix", `${el.offsetLeft}px`);
+      bar.current.style.setProperty("--iw", `${el.offsetWidth}`);
+    };
+    place();
+    const ro = new ResizeObserver(place);
+    if (bar.current) ro.observe(bar.current);
+    document.fonts?.ready.then(place);
+    return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [who]);
+
+  const select = (k: Who, viaKeyboard: boolean) => {
+    if (k === who) return;
+    setInstant(viaKeyboard);
+    setWho(k);
+    track("audience_switch", { who: k });
+  };
+
   const onKey = (e: React.KeyboardEvent, i: number) => {
-    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(e.key)) return;
     e.preventDefault();
-    setInstant(true);
-    const n = (i + 1) % 2;
-    setWho(order[n]);
+    const n = e.key === "Home" ? 0 : e.key === "End" ? 1 : (i + 1) % 2;
+    select(order[n], true);
     tabs.current[n]?.focus();
   };
 
@@ -75,7 +97,7 @@ export function Audiences({ t }: { t: Dictionary }) {
           <h2 id="s-aud-title" className="s-h2">
             {a.title}
           </h2>
-          <div role="tablist" aria-label={a.switchLabel} className="s-seg s-seg--two" data-pos={order.indexOf(who)} data-instant={instant || undefined}>
+          <div ref={bar} role="tablist" aria-label={a.switchLabel} className="g-tabs" data-instant={instant || undefined}>
             {order.map((k, i) => (
               <button
                 key={k}
@@ -86,37 +108,52 @@ export function Audiences({ t }: { t: Dictionary }) {
                 role="tab"
                 id={`s-aud-t-${k}`}
                 aria-selected={who === k}
-                aria-controls="s-aud-panel"
+                aria-controls={`s-aud-p-${k}`}
                 tabIndex={who === k ? 0 : -1}
-                onClick={() => {
-                  setInstant(false);
-                  setWho(k);
-                }}
+                onClick={(e) => select(k, e.detail === 0)}
                 onKeyDown={(e) => onKey(e, i)}
               >
                 {k === "home" ? a.home.tab : a.business.tab}
               </button>
             ))}
-            <span className="s-seg__thumb" aria-hidden="true" />
+            <span className="g-tabs__ink" aria-hidden="true" />
           </div>
         </div>
-        <div id="s-aud-panel" role="tabpanel" aria-labelledby={`s-aud-t-${who}`} className="s-aud__panel" data-who={who} data-instant={instant || undefined} key={who}>
-          <div className="s-aud__lead">
-            <h3>{data.title}</h3>
-            <p>{data.lede}</p>
-            <Diagram who={who} />
-            <a href="#contacte" className="s-btn s-btn--primary" onClick={() => track("audience_cta", { who })}>
-              {data.cta}
-            </a>
-          </div>
-          <ul className="s-aud__list">
-            {data.items.map((it) => (
-              <li key={it.t}>
-                <h4>{it.t}</h4>
-                <p>{it.d}</p>
-              </li>
-            ))}
-          </ul>
+        {/* Both panels share one grid cell: the section keeps the height of the taller one, so switching never jumps. */}
+        <div className="g-aud__stack" data-instant={instant || undefined}>
+          {order.map((k) => {
+            const data = k === "home" ? a.home : a.business;
+            const on = who === k;
+            return (
+              <div
+                key={k}
+                id={`s-aud-p-${k}`}
+                role="tabpanel"
+                aria-labelledby={`s-aud-t-${k}`}
+                className="s-aud__panel"
+                data-on={on || undefined}
+                inert={!on}
+                aria-hidden={!on || undefined}
+              >
+                <div className="s-aud__lead">
+                  <h3>{data.title}</h3>
+                  <p>{data.lede}</p>
+                  <Diagram who={k} />
+                  <a href="#contacte" className="s-btn s-btn--primary" onClick={() => track("audience_cta", { who: k })}>
+                    {data.cta}
+                  </a>
+                </div>
+                <ul className="s-aud__list">
+                  {data.items.map((it, n) => (
+                    <li key={it.t} style={{ "--n": n } as React.CSSProperties}>
+                      <h4>{it.t}</h4>
+                      <p>{it.d}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -1317,56 +1317,171 @@
   }
 }
 
-/* ---------- Audiences · the two words are the switch ---------- */
+/* ---------- Audiences · one quiet switch, the content does the talking ---------- */
 .sig .s-aud__head {
   flex-direction: column;
   align-items: flex-start;
+  gap: clamp(1.75rem, 3vw, 2.5rem);
 }
-.sig .s-aud .s-seg {
+.g-tabs {
+  --ix: 0px;
+  --iw: 0;
+  position: relative;
+  display: flex;
+  gap: clamp(1.75rem, 3.5vw, 3rem);
+  padding-bottom: 0.7rem;
+}
+/* Hairline track the ink travels on */
+.g-tabs::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: rgb(var(--ink-rgb) / 0.12);
+}
+.g-tabs button {
+  position: relative;
+  padding: 0.35rem 0;
+  border: 0;
   background: none;
-  padding: 0;
-  gap: 1.5rem;
-}
-.sig .s-aud .s-seg__thumb {
-  display: none;
-}
-.sig .s-aud .s-seg button {
-  min-height: 0;
-  padding: 0;
-  border-radius: 0;
   font-family: var(--display-face);
   font-weight: 700;
-  font-stretch: 70%;
-  font-size: clamp(2.6rem, 6vw, 6.4rem);
-  line-height: 0.95;
-  letter-spacing: -0.03em;
+  font-stretch: 88%;
+  font-size: clamp(1.45rem, 2.3vw, 2rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   color: var(--ink-faint);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition:
-    color 300ms ease,
-    font-stretch 600ms var(--ease-out);
+    color 260ms var(--ease-out),
+    transform 160ms var(--ease-out);
 }
-.sig .s-aud .s-seg button[aria-selected="true"] {
-  color: var(--navy);
-  font-stretch: 100%;
+.g-tabs button[aria-selected="true"] {
+  color: var(--ink);
 }
-.sig .s-aud .s-seg button:focus-visible {
+.g-tabs button:active {
+  transform: scale(0.98);
+}
+/* No box on mouse click; a clear ring for the keyboard only. */
+.g-tabs button:focus {
+  outline: none;
+}
+.g-tabs button:focus-visible {
+  outline: 2px solid var(--brand);
   outline-offset: 6px;
+  border-radius: 6px;
 }
-.sig .s-aud__panel {
-  background: none;
+/* Hover: the label warms up and a faint ink hints where the line would go. */
+.g-tabs button::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(-0.7rem - 0px);
+  height: 2px;
+  border-radius: 2px;
+  background: rgb(var(--accent-rgb) / 0.35);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 320ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .g-tabs button:not([aria-selected="true"]):hover {
+    color: var(--ink-muted);
+  }
+  .g-tabs button:not([aria-selected="true"]):hover::after {
+    transform: scaleX(1);
+  }
+}
+.g-tabs__ink {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brand);
+  transform-origin: left center;
+  transform: translateX(var(--ix)) scaleX(calc(var(--iw) / 100));
+  transition: transform 480ms cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 1;
+}
+.g-tabs[data-instant] .g-tabs__ink {
+  transition: none;
+}
+
+/* Panels stacked in one cell: no height change, no flash. */
+.g-aud__stack {
+  display: grid;
+}
+.sig .g-aud__stack > .s-aud__panel {
+  grid-area: 1 / 1;
   padding: 0;
   border-radius: 0;
+  background: none;
+  animation: none;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(10px);
+  filter: blur(6px);
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease,
+    filter 200ms ease,
+    visibility 0s linear 200ms;
+}
+.sig .g-aud__stack > .s-aud__panel[data-on] {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition:
+    opacity 520ms var(--ease-out) 140ms,
+    transform 680ms cubic-bezier(0.32, 0.72, 0, 1) 140ms,
+    filter 520ms var(--ease-out) 140ms,
+    visibility 0s;
+}
+/* The four promises arrive a beat after the headline, one after another. */
+.sig .g-aud__stack > .s-aud__panel .s-aud__list li {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+.sig .g-aud__stack > .s-aud__panel[data-on] .s-aud__list li {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 480ms var(--ease-out) calc(240ms + var(--n) * 60ms),
+    transform 600ms cubic-bezier(0.32, 0.72, 0, 1) calc(240ms + var(--n) * 60ms);
+}
+.g-aud__stack[data-instant] > .s-aud__panel,
+.g-aud__stack[data-instant] > .s-aud__panel .s-aud__list li {
+  transition: none !important;
 }
 .sig .s-aud__svg {
   display: none;
 }
-@media (max-width: 760px) {
-  .sig .s-aud .s-seg {
-    flex-wrap: wrap;
-    gap: 0.25rem 0.75rem;
+@media (prefers-reduced-motion: reduce) {
+  .g-tabs__ink {
+    transition: none;
   }
-  .sig .s-aud .s-seg button {
-    font-size: clamp(2.2rem, 11vw, 3rem);
+  .sig .g-aud__stack > .s-aud__panel,
+  .sig .g-aud__stack > .s-aud__panel .s-aud__list li {
+    transform: none;
+    filter: none;
+  }
+}
+@media (max-width: 760px) {
+  .g-tabs {
+    gap: 1.75rem;
+  }
+  .g-tabs button {
+    font-size: 1.4rem;
   }
 }
 
@@ -1789,4 +1904,143 @@ label.s-cookie__cat {
     flex-wrap: wrap;
     gap: 0.25rem 1.25rem;
   }
+}
+
+/* ---------- People · the human counterpoint (Lleida office) ---------- */
+.g-people {
+  position: relative;
+  overflow: clip;
+  padding: clamp(6rem, 11vw, 10rem) 0 clamp(6rem, 12vw, 11rem);
+  /* White from the process above, easing into the mint of the next chapter. */
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface) 55%, var(--surface-tint) 100%);
+}
+.g-people__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+  align-items: center;
+  gap: clamp(2.5rem, 5vw, 5.5rem);
+  max-width: calc(var(--max) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding-left: var(--gutter);
+}
+.g-people__copy {
+  display: grid;
+  justify-items: start;
+  gap: 1.4rem;
+  max-width: 30rem;
+}
+.g-people__kicker {
+  margin: 0;
+  font: 600 0.78rem/1 var(--font);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--brand-text);
+}
+.g-people__title {
+  margin: 0;
+  font-family: var(--display-face);
+  font-weight: 700;
+  font-stretch: 88%;
+  font-size: clamp(2.4rem, 4.4vw, 4.4rem);
+  line-height: 0.96;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.g-people__text {
+  margin: 0;
+  font-size: clamp(1.05rem, 1.25vw, 1.18rem);
+  line-height: 1.6;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+.g-people__copy .g-btn {
+  margin-top: 0.5rem;
+}
+.g-people__fig {
+  margin: 0;
+  min-width: 0;
+}
+/* The photograph bleeds to the right edge of the page: editorial, not a card. */
+.g-people__frame {
+  position: relative;
+  aspect-ratio: 1448 / 1086;
+  overflow: hidden;
+  border-radius: 28px 0 0 28px;
+  background: var(--surface-tint);
+  box-shadow: 0 50px 90px -60px rgb(var(--ink-rgb) / 0.55);
+}
+.g-people__layer {
+  position: absolute;
+  inset: 0;
+}
+.g-people__layer picture {
+  display: contents;
+}
+.g-people__img {
+  position: absolute;
+  inset: -5% 0;
+  width: 100%;
+  height: 110%;
+  object-fit: cover;
+  will-change: transform;
+}
+/* Editorial grade on the untouched photo: a little less saturation, a warmer white point. */
+.g-people__color {
+  filter: saturate(0.86) sepia(0.07) contrast(1.02) brightness(1.02);
+}
+.g-people__grey {
+  filter: grayscale(1) contrast(1.04) brightness(1.04);
+}
+.g-people__mono {
+  will-change: opacity;
+}
+/* Corporate green breathed into the shadows, barely. */
+.g-people__tint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgb(var(--soft-rgb) / 0.08), transparent 40%),
+    linear-gradient(0deg, rgb(var(--brand-rgb) / 0.14), transparent 45%);
+  mix-blend-mode: soft-light;
+}
+.g-people__fig figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem 2rem;
+  padding: 1rem var(--gutter) 0 0;
+}
+.g-people__place {
+  font: 500 0.82rem var(--mono);
+  color: var(--ink);
+}
+.g-people__ai {
+  max-width: 46ch;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ink-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-people__mono {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  .g-people__grid {
+    grid-template-columns: 1fr;
+    padding-right: var(--gutter);
+  }
+  .g-people__fig {
+    margin-right: calc(-1 * var(--gutter));
+  }
+  .g-people__copy {
+    max-width: 36rem;
+  }
+}
+
+/* ---------- Contact first, collaborators after ---------- */
+.sig .s-close + .s-collab {
+  border-top: 1px solid var(--glass-line);
 }

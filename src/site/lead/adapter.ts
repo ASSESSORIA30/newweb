@@ -46,6 +46,7 @@ export function buildFormspreePayload(lead: Lead): Record<string, string> {
   // 1 · Metadata (ignored by the CRM reader as separate fields, kept in Formspree and in the email).
   const meta: [string, string | undefined][] = [
     ["_subject", `Web A3 · ${o[lead.locale]} · ${lead.contact.name}`],
+    ["formulari", lead.kind === "collaborator" ? "formulari-collaboradors" : lead.kind === "callback" ? "formulari-trucada-assessor" : "formulari-contacte-general"],
     ["origen", o.code],
     ["idioma", lead.locale],
     ["pagina_origen", lead.page],
@@ -63,11 +64,12 @@ export function buildFormspreePayload(lead: Lead): Record<string, string> {
 
   // 2 · Readable summary appended to the message (this is what the CRM stores).
   const L = es
-    ? { head: "— Datos de la consulta web —", origin: "Origen de la consulta", page: "Página de origen", lang: "Lengua", type: "Tipo de cliente", ref: "Código de colaborador", utm: "Campaña (UTM)", when: "Fecha de la consulta", priv: "Consentimiento privacidad", mkt: "Consentimiento comercial" }
-    : { head: "— Dades de la consulta web —", origin: "Origen de la consulta", page: "Pàgina d’origen", lang: "Llengua", type: "Tipus de client", ref: "Codi de col·laborador", utm: "Campanya (UTM)", when: "Moment de la consulta", priv: "Consentiment privacitat", mkt: "Consentiment comercial" };
+    ? { head: "— Datos de la consulta web —", form: "Formulario", formGen: "Contacto general", formCol: "Colaboradores", formCall: "Llamada de un asesor", origin: "Origen de la consulta", page: "Página de origen", lang: "Lengua", type: "Tipo de cliente", ref: "Código de colaborador", utm: "Campaña (UTM)", when: "Fecha de la consulta", priv: "Consentimiento privacidad", mkt: "Consentimiento comercial" }
+    : { head: "— Dades de la consulta web —", form: "Formulari", formGen: "Contacte general", formCol: "Col·laboradors", formCall: "Trucada d’un assessor", origin: "Origen de la consulta", page: "Pàgina d’origen", lang: "Llengua", type: "Tipus de client", ref: "Codi de col·laborador", utm: "Campanya (UTM)", when: "Moment de la consulta", priv: "Consentiment privacitat", mkt: "Consentiment comercial" };
   const utmLine = [utm("utm_source"), utm("utm_medium"), utm("utm_campaign"), utm("utm_term"), utm("utm_content")].filter(Boolean).join(" / ");
   const summary = [
     L.head,
+    `${L.form}: ${lead.kind === "collaborator" ? L.formCol : lead.kind === "callback" ? L.formCall : L.formGen}`,
     `${L.origin}: ${o[lead.locale]} (${o.code})`,
     `${L.page}: ${lead.page}`,
     `${L.lang}: ${lead.locale}`,
