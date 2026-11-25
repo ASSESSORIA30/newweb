@@ -8,7 +8,7 @@ import { SignatureHome } from "@/signature/home/SignatureHome";
 import { homeMetadata } from "@/site/seo/metadata";
 
 export const metadata: Metadata = homeMetadata("es");
-export const viewport: Viewport = { themeColor: "#060d22" };
+export const viewport: Viewport = { themeColor: "#fafcfb" };
 
 export default function Page() {
   return <SignatureHome locale="es" />;

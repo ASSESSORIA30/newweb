@@ -7,7 +7,7 @@ import { gsap, useGSAP } from "@/lib/gsap";
  * Chapter transition: the incoming chapter opens like an aperture (rounded inset mask → full
  * bleed) as it scrolls in, so the page reads as one continuous shot rather than stacked blocks.
  */
-export function SigReveal({ children, tone }: { children: React.ReactNode; tone: "light" | "night" }) {
+export function SigReveal({ children, tone }: { children: React.ReactNode; tone: "light" | "tint" | "night" }) {
   const ref = useRef<HTMLDivElement>(null);
   useGSAP(
     () => {

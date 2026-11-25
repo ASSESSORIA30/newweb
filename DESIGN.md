@@ -1,26 +1,33 @@
 ---
-name: Assessoria 3.0 — A3 Corporate Signature
-description: Energy advisory with people behind the technology. A glass 3.0 ring lit by ordered energy, night chapters on #050A1C alternating with luminous white editorial chapters.
+name: Assessoria 3.0 — A3 Signature Green
+description: Energy advisory with people behind the technology. A glass 3.0 ring on a luminous natural-white ground, energy ordered into the corporate green, deep green kept for a few cinematic moments.
 colors:
-  canvas: "#FFFFFF"
-  mist: "#F0F4FA"
-  mist-deep: "#E3EAF6"
-  navy: "#10203D"
-  navy-deep: "#0A1630"
-  night: "#050A1C"
-  ink-2: "#2C3D5C"
-  slate: "#4E5D7A"
-  blue: "#2458FF"
-  blue-text: "#1C4BE0"
-  blue-press: "#1A45D6"
-  sky: "#84B9FF"
-  sky-soft: "#C9DEFF"
-  saving: "#00B050"
-  saving-text: "#08803E"
+  green-950: "#0B241C"
+  green-900: "#12382D"
+  green-800: "#145A41"
+  green-700: "#176B4D"
+  green-500: "#38A879"
+  green-300: "#7CC79F"
+  green-200: "#A8DFBD"
+  green-100: "#DCEDE2"
+  green-50: "#EDF6F0"
+  white-natural: "#FAFCFB"
+  surface: "{colors.white-natural}"
+  surface-raised: "#FFFFFF"
+  surface-tint: "{colors.green-50}"
+  surface-deep: "{colors.green-900}"
+  ink: "{colors.green-900}"
+  ink-soft: "#2B4A3F"
+  ink-muted: "#4A6359"
+  ink-faint: "#6B8379"
+  brand: "{colors.green-700}"
+  brand-press: "{colors.green-800}"
+  accent: "{colors.green-500}"
+  accent-soft: "{colors.green-200}"
+  on-deep-2: "#C3DCCD"
   simulation: "#9A4F00"
-  simulation-on-navy: "#F5C77E"
-  line: "rgba(16, 32, 61, 0.12)"
-  line-on-navy: "rgba(201, 222, 255, 0.16)"
+  simulation-on-deep: "#F5C77E"
+  line: "rgba(18, 56, 45, 0.12)"
 typography:
   display:
     fontFamily: "Anybody Variable, Geologica Variable, system-ui, sans-serif"
@@ -72,63 +79,67 @@ spacing:
   gutter: "clamp(1.25rem, 4vw, 4rem)"
 components:
   button-primary:
-    backgroundColor: "{colors.blue}"
-    textColor: "{colors.canvas}"
+    backgroundColor: "{colors.brand}"
+    textColor: "{colors.surface-raised}"
     rounded: "{rounded.control}"
     padding: "0 22px"
     height: "52px"
   button-primary-hover:
-    backgroundColor: "{colors.blue-press}"
+    backgroundColor: "{colors.brand-press}"
   button-secondary:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.navy}"
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.control}"
     padding: "0 22px"
     height: "52px"
-  button-on-navy:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.navy}"
+  button-on-deep:
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.control}"
     height: "52px"
   panel:
-    backgroundColor: "{colors.canvas}"
+    backgroundColor: "{colors.surface-raised}"
     rounded: "{rounded.panel}"
     padding: "28px"
   panel-mist:
-    backgroundColor: "{colors.mist}"
+    backgroundColor: "{colors.surface-tint}"
     rounded: "{rounded.panel}"
     padding: "28px"
   segmented:
-    backgroundColor: "{colors.mist}"
+    backgroundColor: "{colors.surface-tint}"
     textColor: "{colors.slate}"
     rounded: "{rounded.pill}"
     height: "48px"
   field:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.navy}"
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.control}"
     height: "52px"
 ---
 
 ## Overview
 
-A3 Corporate Signature is the art-directed evolution of A3 Corporate. The brand symbol is a **glass 3.0 ring**: thin, clear, refractive glass lit from behind, with energy streams that arrive as chaos and leave as ordered lines through it. Next to it, a typeset **"3."** in the display face. The page is a film in chapters: night chapters (#050A1C) for the hero, services, process and close; luminous white editorial chapters for audiences, trust and partners. Chapters open through apertures (a light that grows out of the ring into the next scene).
+A3 Signature Green keeps the structure, motion and 3D of A3 Corporate Signature and moves it into the corporate green on luminous grounds. The brand symbol is a **glass 3.0 ring**: thin, clear, refractive glass lit from behind, with energy streams that arrive as chaos and leave as ordered lines through it. Next to it, a typeset **"3."** in the display face. The page is a film in chapters: natural white and mint chapters for the hero, SavEnergy, services, audiences, process, value, partners and trust; deep green only for the offer comparison and the collaborators + close + footer. Chapters open through apertures (a light that grows out of the ring into the next scene).
 
-Sequence: hero ring (scroll flies the camera through the ring, its light becomes the SavEnergy opening) → SavEnergy (a physical bill turns to face you, is scanned, its rows lift and fly as data into charts, then an anonymised comparison on navy, then the live console) → services as one particle body that morphs between five identities → audiences as two words → process with the ring returning as the yearly cycle → value → trust as one sentence of figures and one large quote → collaborators and close.
+Sequence (A3 Signature Green): hero ring on natural white (scroll flies the camera through the ring, its light becomes the SavEnergy opening) → SavEnergy (a physical bill turns to face you, is scanned, its rows lift and fly as data into charts, then an anonymised comparison on deep green, then the live console) → services as one particle body that morphs between five identities → audiences as two words → the original five-step process cycle → value → trust as one sentence of figures and one large quote → collaborators and close.
 
 Brand continuity: the official logo is used unchanged in header and footer; its green survives only as **saving**.
 
 ## Colors
 
-- **Canvas `#FFFFFF` / Mist `#F0F4FA` / Mist deep `#E3EAF6`** — grounds. White is the default; mist separates bands; mist-deep for pressed or selected surfaces.
-- **Navy `#10203D` / Navy deep `#0A1630`** — ink for all text on light grounds and the ground of the two dark chapters (collaborators, close + footer).
-- **Ink-2 `#2C3D5C`, Slate `#4E5D7A`** — secondary and tertiary text. Slate is the lightest text allowed on white (6.6:1).
-- **Blue `#2458FF`** — the one action colour: primary buttons, the energy trace, focus rings, selected states. As text use **Blue-text `#1C4BE0`** (6.7:1 on white, 5.5:1 on mist-deep). Hover/press **`#1A45D6`**.
-- **Sky `#84B9FF`, Sky-soft `#C9DEFF`** — secondary energy (dim traces, chart fills) and accent text on navy.
-- **Saving `#00B050` (fills) / Saving-text `#08803E` (text, 4.9:1)** — from the logo; only for savings and positive outcomes.
-- **Simulation `#9A4F00` / on navy `#F5C77E`** — the label colour for every simulated or pending-verification element. Never decorative.
+A3 Signature Green replaces the blue of Signature with the green of the official logo, refined to sit between technology and trust: deep, slightly cool greens, never fluorescent, never "eco".
 
-Every text pair used ships at WCAG AA or better. No gradients as decoration: the only gradients are light falloff on the energy field and data fills.
+**Single source of truth.** All colours live in `src/site/site.css` (`.site` block): primitives (`--green-950 … --green-50`, `--white-natural`), alpha channels (`--ink-rgb`, `--brand-rgb`, `--accent-rgb`, `--soft-rgb`, `--deep-rgb`), then semantic tokens (`--surface`, `--surface-tint`, `--surface-deep`, `--ink`, `--ink-soft`, `--ink-muted`, `--ink-faint`, `--brand`, `--brand-press`, `--accent`, `--accent-soft`, `--on-deep-2`). Legacy names used by older components (`--navy`, `--blue`, `--sky`, `--mist`…) are aliases of the semantic layer. WebGL and canvas read the same variables through `src/signature/visuals/tokens.ts`: the glass attenuation, backdrop light pool, graticule, energy streams, "3." mark, rim light and the service particles all follow the tokens.
+
+- **Surface `#FAFCFB` (natural white) / Raised `#FFFFFF` / Tint `#EDF6F0` / Tint-2 `#DCEDE2`**: grounds. White and mint alternate between chapters so apertures still read on light.
+- **Ink `#12382D`** (12.5:1 on surface): headings and text. **Ink-soft `#2B4A3F`** (9.5:1), **Ink-muted `#4A6359`** (6.3:1; 5.9:1 on tint). **Ink-faint `#6B8379`** (3.96:1) only for large or inactive display text.
+- **Brand `#176B4D`**: primary buttons (white text 6.5:1), selected states, brand text (6.3:1), ordered energy. Press `#145A41`.
+- **Accent `#38A879`**: fills, chart bars, energy pulses and particles; never body text on light. Labels on accent use `#0B241C`.
+- **Accent-soft `#A8DFBD`**: light pools, glass tint, accent text on deep (8.6:1).
+- **Deep `#12382D` / Deeper `#0B241C`**: reserved for the cinematic moments: SavEnergy's offer comparison, the "human attention" card, Collaborators + Close and the footer (≈15–20% of the page).
+- **Simulation `#9A4F00` / on deep `#F5C77E`**: unchanged; every simulated or unverified element.
+
+Luminosity: about 80% of the page is on white or mint. Light comes from materials (translucent glass tinted green, soft green light pools, subtle shadows tinted with ink) rather than from bloom; bloom is disabled on light grounds because it washes out the glass.
 
 ## Typography
 
@@ -152,11 +163,11 @@ Controls 10px radius, panels 18px, pills (999px) only for segmented controls and
 
 ## Components
 
-- **Hero ring (WebGL, three.js)**: MeshPhysicalMaterial glass torus (transmission, dispersion on high tier, clearcoat) on a navy backdrop with a radial backlight; energy streams as tube shaders that order themselves over 2.4 s; cursor moves a point light; scroll flies the camera into the ring and its centre becomes a circular aperture into the SavEnergy title (match cut). Device tiers: high (bloom, dispersion, 11 streams), low (6 streams, no bloom), off (static poster webp) for reduced motion, Save-Data, low memory and software GL.
+- **Hero ring (WebGL, three.js)**: MeshPhysicalMaterial glass torus (transmission, dispersion on high tier, clearcoat) green-tinted attenuation, on a natural-white backdrop with a mint light pool and faint green graticule; streams go from faint mint (chaos) to ink and brand green (order) with accent pulses; energy streams as tube shaders that order themselves over 2.4 s; cursor moves a point light; scroll flies the camera into the ring and its centre becomes a circular aperture into the SavEnergy title (match cut). Device tiers: high (dispersion, 11 streams), low (6 streams), off (static poster webp) for reduced motion, Save-Data, low memory and software GL.
 - **Hero copy**: two-beat headline, subtitle, primary CTA "Analitza la meva factura" which opens the SavEnergy console directly; dock with the three SavEnergy modes from the first screen.
 - **SavEnergy**: pinned 520vh scene on desktop (static sequence under 1024px or reduced motion): bill turns (rotateY −62° → 0), scanner sweeps, rows lift in Z, data points fly on curved paths into power / energy / period charts, then a comparison of 14 anonymised suppliers on navy. Every value is synthetic and carries the Simulació label; no savings figure is presented as real.
 - **Services**: one Canvas2D particle body (1400 / 700 points) morphing between electricity (parallel flows), gas (flame plume), telecom (network), alarms (shield + sweep), insurance (balanced orbits); a name list drives it. No card grid.
-- **Process**: night chapter; the ring image returns and rotates with scroll as the yearly cycle; five verbs replace each other in the centre with a mask wipe and width change; the step list expands only the active step.
+- **Process**: the original A3 Corporate component (`src/site/home/Process.tsx` + its site.css styles), reused unchanged on white: headline and text left, five numbered steps, animated ring on the right with five numbered nodes and a centre label that follows the active step, scroll-synchronised. Only the colours change, through the tokens.
 - **Audiences**: the words Particulars / Empreses are the switch (display face, width as state).
 - **Trust**: figures in one editorial sentence, one large quote at a time with city buttons; while unverified, both carry the pending label.
 - **Partners**: confirmed partners only; until then one sentence with the pending label.

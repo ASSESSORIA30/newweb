@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "@/lib/gsap";
 import { isMotionPaused } from "@/lib/motion";
+import { readTokens, rgbList } from "./tokens";
 
 /**
  * One material, five forms. ~1400 particles morph between service formations driven by a
@@ -143,6 +144,13 @@ export function ParticleMorph({ className, value }: { className?: string; value:
     let last = performance.now();
     const ease = (x: number) => x * x * (3 - 2 * x);
 
+    // Colours from the tokens: structure in corporate green, particles in accent, hot points in ink.
+    const T = readTokens();
+    const LINE = rgbList(T.brand);
+    const SWEEP = rgbList(T.accent);
+    const DOT = rgbList(T.accent);
+    const HOT = rgbList(T.ink);
+
     const draw = () => {
       const t = elapsed / 1000;
       const v = Math.max(0, Math.min(4, value.current));
@@ -160,7 +168,7 @@ export function ParticleMorph({ className, value }: { className?: string; value:
         ctx.globalCompositeOperation = "source-over";
         ctx.lineWidth = 1;
         if (k === 2) {
-          ctx.strokeStyle = `rgba(132,185,255,${0.16 * weight})`;
+          ctx.strokeStyle = `rgba(${LINE},${0.16 * weight})`;
           ctx.beginPath();
           for (const [i, j] of EDGES) {
             ctx.moveTo(NODES[i][0] * w, NODES[i][1] * h);
@@ -168,13 +176,13 @@ export function ParticleMorph({ className, value }: { className?: string; value:
           }
           ctx.stroke();
           const wave = (t * 0.35) % 1;
-          ctx.strokeStyle = `rgba(132,185,255,${0.35 * (1 - wave) * weight})`;
+          ctx.strokeStyle = `rgba(${LINE},${0.35 * (1 - wave) * weight})`;
           ctx.beginPath();
           ctx.arc(w * 0.5, h * 0.5, wave * Math.min(w, h) * 0.55, 0, TAU);
           ctx.stroke();
         }
         if (k === 3) {
-          ctx.strokeStyle = `rgba(132,185,255,${0.22 * weight})`;
+          ctx.strokeStyle = `rgba(${LINE},${0.22 * weight})`;
           ctx.beginPath();
           for (let s = 0; s <= 80; s++) {
             const [x, y] = shield(s / 80);
@@ -186,8 +194,8 @@ export function ParticleMorph({ className, value }: { className?: string; value:
           const sweep = (t * 1.4) % TAU;
           const r = Math.min(w, h) * 0.42;
           const g = ctx.createRadialGradient(w * 0.5, h * 0.48, 0, w * 0.5, h * 0.48, r);
-          g.addColorStop(0, `rgba(36,88,255,${0.18 * weight})`);
-          g.addColorStop(1, "rgba(36,88,255,0)");
+          g.addColorStop(0, `rgba(${SWEEP},${0.16 * weight})`);
+          g.addColorStop(1, `rgba(${SWEEP},0)`);
           ctx.fillStyle = g;
           ctx.beginPath();
           ctx.moveTo(w * 0.5, h * 0.48);
@@ -196,13 +204,13 @@ export function ParticleMorph({ className, value }: { className?: string; value:
           ctx.fill();
         }
         if (k === 4) {
-          ctx.strokeStyle = `rgba(132,185,255,${0.18 * weight})`;
+          ctx.strokeStyle = `rgba(${LINE},${0.18 * weight})`;
           for (const r of [0.12, 0.22, 0.32]) {
             ctx.beginPath();
             ctx.ellipse(w * 0.5, h * 0.5, r * 0.85 * w, r * h, 0, 0, TAU);
             ctx.stroke();
           }
-          ctx.fillStyle = `rgba(255,255,255,${0.9 * weight})`;
+          ctx.fillStyle = `rgba(${HOT},${0.9 * weight})`;
           ctx.beginPath();
           ctx.arc(w * 0.5, h * 0.5, 4, 0, TAU);
           ctx.fill();
@@ -211,7 +219,7 @@ export function ParticleMorph({ className, value }: { className?: string; value:
       strokes(a, wA);
       strokes(a + 1, wB);
 
-      ctx.globalCompositeOperation = "lighter";
+      ctx.globalCompositeOperation = "source-over";
       for (let i = 0; i < N; i++) {
         const [x1, y1, b1] = fa(i, N, t, w, h);
         const [x2, y2, b2] = fb(i, N, t, w, h);
@@ -221,8 +229,8 @@ export function ParticleMorph({ className, value }: { className?: string; value:
         const y = y1 + (y2 - y1) * m - arc * 0.6;
         const br = b1 + (b2 - b1) * m;
         const hot = br > 0.85;
-        ctx.fillStyle = hot ? `rgba(234,243,255,${Math.min(1, br)})` : `rgba(132,185,255,${0.4 + br * 0.6})`;
-        const s = hot ? 2.8 : 2;
+        ctx.fillStyle = hot ? `rgba(${HOT},${Math.min(1, br)})` : `rgba(${DOT},${0.35 + br * 0.55})`;
+        const s = hot ? 3 : 2.4;
         ctx.fillRect(x - s / 2, y - s / 2, s, s);
       }
     };

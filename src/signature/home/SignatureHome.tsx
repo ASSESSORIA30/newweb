@@ -5,7 +5,7 @@ import { RefreshOnFonts } from "@/site/home/RefreshOnFonts";
 import { JsonLd } from "@/site/seo/JsonLd";
 import { Footer } from "@/site/home/Footer";
 import { Audiences } from "@/site/home/Audiences";
-import { SigProcess } from "./SigProcess";
+import { Process } from "@/site/home/Process";
 import { Value } from "@/site/home/Value";
 import { Partners } from "@/site/home/Partners";
 import { SigTrust } from "./SigTrust";
@@ -35,27 +35,27 @@ export function SignatureHome({ locale }: { locale: Locale }) {
       <main id="main">
         <SignatureHero t={t} />
         <SigSavEnergy t={t} locale={locale} />
-        <div className="g-chapter g-chapter--night">
-          <SigReveal tone="night">
+        <div className="g-chapter" style={{ "--g-prev": "var(--surface)" } as React.CSSProperties}>
+          <SigReveal tone="tint">
             <SigServices t={t} />
           </SigReveal>
         </div>
-        <div className="g-chapter g-chapter--light">
+        <div className="g-chapter" style={{ "--g-prev": "var(--surface)" } as React.CSSProperties}>
           <SigReveal tone="light">
             <div>
               <Audiences t={t} />
+              <Process t={t} />
             </div>
           </SigReveal>
         </div>
-        <div className="g-chapter g-chapter--night">
-          <SigReveal tone="night">
+        <div className="g-chapter" style={{ "--g-prev": "var(--surface)" } as React.CSSProperties}>
+          <SigReveal tone="tint">
             <div>
-              <SigProcess t={t} />
               <Value t={t} />
             </div>
           </SigReveal>
         </div>
-        <div className="g-chapter g-chapter--light">
+        <div className="g-chapter" style={{ "--g-prev": "var(--surface-tint)" } as React.CSSProperties}>
           <SigReveal tone="light">
             <div>
               <Partners t={t} />
@@ -63,7 +63,7 @@ export function SignatureHome({ locale }: { locale: Locale }) {
             </div>
           </SigReveal>
         </div>
-        <div className="g-chapter g-chapter--night">
+        <div className="g-chapter" style={{ "--g-prev": "var(--surface)" } as React.CSSProperties}>
           <SigReveal tone="night">
             <div>
               <Collaborators t={t} locale={locale} />

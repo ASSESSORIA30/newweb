@@ -48,12 +48,12 @@ export function SigServices({ t }: { t: Dictionary }) {
   const s = t.services.items[k];
 
   return (
-    <section ref={root} id="serveis" className="g-svc" data-tone="navy" aria-labelledby="g-svc-title">
+    <section ref={root} id="serveis" className="g-svc" aria-labelledby="g-svc-title">
       <div className="s-wrap g-svc__head">
-        <h2 id="g-svc-title" className="g-display g-display--light">
+        <h2 id="g-svc-title" className="g-display">
           {t.services.title}
         </h2>
-        <p className="g-lede g-lede--light">{t.services.lede}</p>
+        <p className="g-lede">{t.services.lede}</p>
       </div>
       <div className="g-svc__track">
         <div className="g-svc__stage">
@@ -75,7 +75,7 @@ export function SigServices({ t }: { t: Dictionary }) {
                   <li key={p}>{p}</li>
                 ))}
               </ul>
-              <a href="#contacte" className="g-btn g-btn--light" onClick={() => track("service_cta", { service: k })}>
+              <a href="#contacte" className="g-btn g-btn--brand" onClick={() => track("service_cta", { service: k })}>
                 {t.services.cta}
               </a>
             </div>

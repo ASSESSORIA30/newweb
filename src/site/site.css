@@ -2,33 +2,71 @@
 
 :root:has(.site) {
   color-scheme: light;
-  background: #ffffff;
-  scrollbar-color: #c9d4e6 #ffffff;
+  background: #fafcfb;
+  scrollbar-color: #c8d9cf #fafcfb;
 }
 
 .site {
-  --canvas: #ffffff;
-  --mist: #f0f4fa;
-  --mist-deep: #e3eaf6;
-  --navy: #10203d;
-  --navy-deep: #0a1630;
-  --ink-2: #2c3d5c;
-  --slate: #4e5d7a;
-  --blue: #2458ff;
-  --blue-text: #1c4be0;
-  --blue-press: #1a45d6;
-  --sky: #84b9ff;
-  --sky-soft: #c9deff;
-  --saving: #00b050;
-  --saving-text: #08803e;
+  /* ---- Colour: single source of truth (A3 Signature Green). JS reads these via readTokens(). ---- */
+  /* Primitives, refined from the official logo green */
+  --green-950: #0b241c;
+  --green-900: #12382d;
+  --green-800: #145a41;
+  --green-700: #176b4d;
+  --green-500: #38a879;
+  --green-300: #7cc79f;
+  --green-200: #a8dfbd;
+  --green-100: #dcede2;
+  --green-50: #edf6f0;
+  --white-natural: #fafcfb;
+  /* Channels for alpha mixes: rgb(var(--ink-rgb) / 0.1) */
+  --ink-rgb: 18 56 45;
+  --brand-rgb: 23 107 77;
+  --accent-rgb: 56 168 121;
+  --soft-rgb: 168 223 189;
+  --deep-rgb: 11 36 28;
+  /* Semantic */
+  --surface: var(--white-natural);
+  --surface-raised: #ffffff;
+  --surface-tint: var(--green-50);
+  --surface-tint-2: var(--green-100);
+  --surface-deep: var(--green-900);
+  --surface-deeper: var(--green-950);
+  --ink: var(--green-900);
+  --ink-soft: #2b4a3f;
+  --ink-muted: #4a6359;
+  --ink-faint: #6b8379;
+  --brand: var(--green-700);
+  --brand-press: var(--green-800);
+  --brand-text: var(--green-700);
+  --accent: var(--green-500);
+  --accent-soft: var(--green-200);
+  --on-deep: #ffffff;
+  --on-deep-2: #c3dccd;
+  --on-deep-accent: var(--green-200);
+  /* Legacy names used across components, mapped onto the semantic layer */
+  --canvas: var(--surface);
+  --mist: var(--surface-tint);
+  --mist-deep: var(--surface-tint-2);
+  --navy: var(--ink);
+  --navy-deep: var(--surface-deeper);
+  --ink-2: var(--ink-soft);
+  --slate: var(--ink-muted);
+  --blue: var(--brand);
+  --blue-text: var(--brand-text);
+  --blue-press: var(--brand-press);
+  --sky: var(--accent);
+  --sky-soft: var(--accent-soft);
+  --saving: var(--accent);
+  --saving-text: var(--brand-text);
   --sim: #9a4f00;
   --sim-on-navy: #f5c77e;
-  --line: rgb(16 32 61 / 0.12);
-  --line-strong: rgb(16 32 61 / 0.2);
-  --line-navy: rgb(201 222 255 / 0.16);
-  --on-navy-2: #b5c3dc;
-  --shadow-1: 0 1px 2px rgb(16 32 61 / 0.06), 0 12px 28px -16px rgb(16 32 61 / 0.22);
-  --shadow-2: 0 40px 80px -40px rgb(16 32 61 / 0.45);
+  --line: rgb(var(--ink-rgb) / 0.12);
+  --line-strong: rgb(var(--ink-rgb) / 0.2);
+  --line-navy: rgb(var(--soft-rgb) / 0.18);
+  --on-navy-2: var(--on-deep-2);
+  --shadow-1: 0 1px 2px rgb(var(--ink-rgb) / 0.05), 0 14px 30px -18px rgb(var(--ink-rgb) / 0.2);
+  --shadow-2: 0 40px 80px -40px rgb(var(--ink-rgb) / 0.35);
   --r-control: 10px;
   --r-panel: 18px;
   --gutter: clamp(1.25rem, 4vw, 4rem);
@@ -124,8 +162,8 @@
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(to right, rgb(16 32 61 / 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(16 32 61 / 0.05) 1px, transparent 1px);
+    linear-gradient(to right, rgb(var(--ink-rgb) / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(var(--ink-rgb) / 0.05) 1px, transparent 1px);
   background-size: calc(100% / 12) 96px;
   mask-image: radial-gradient(90% 80% at 70% 40%, #000 30%, transparent 85%);
 }
@@ -168,7 +206,7 @@
 .s-btn--primary {
   background: var(--blue);
   color: #fff;
-  box-shadow: 0 8px 20px -10px rgb(36 88 255 / 0.7);
+  box-shadow: 0 8px 20px -10px rgb(var(--brand-rgb) / 0.7);
 }
 .s-btn--secondary {
   background: var(--canvas);
@@ -208,7 +246,7 @@
   text-decoration: underline;
   text-decoration-thickness: 1.5px;
   text-underline-offset: 5px;
-  text-decoration-color: rgb(28 75 224 / 0.35);
+  text-decoration-color: rgb(var(--brand-rgb) / 0.35);
   transition: text-decoration-color 200ms ease;
 }
 .s-textbtn {
@@ -245,7 +283,7 @@
   box-shadow: 0 1px 0 var(--line);
 }
 .s-header[data-navy][data-solid] {
-  background: rgb(10 22 48 / 0.96);
+  background: rgb(var(--deep-rgb) / 0.96);
   box-shadow: 0 1px 0 var(--line-navy);
 }
 .s-header[data-navy] .s-logo,
@@ -342,7 +380,7 @@
 .s-lang a[aria-current] {
   background: #fff;
   color: var(--navy);
-  box-shadow: 0 1px 2px rgb(16 32 61 / 0.12);
+  box-shadow: 0 1px 2px rgb(var(--ink-rgb) / 0.12);
 }
 .s-menu {
   display: none;
@@ -427,7 +465,7 @@
 .s-hero__field[data-fallback] {
   opacity: 1;
   background:
-    repeating-linear-gradient(to bottom, transparent 0 22px, rgb(132 185 255 / 0.18) 22px 23px);
+    repeating-linear-gradient(to bottom, transparent 0 22px, rgb(var(--accent-rgb) / 0.18) 22px 23px);
   mask-image: radial-gradient(60% 55% at 60% 60%, #000, transparent 80%);
 }
 .s-hero__field canvas {
@@ -728,8 +766,8 @@
   gap: 0.75rem;
   padding: 0.6rem 0.7rem;
   border-radius: 6px;
-  background: rgb(36 88 255 / calc(var(--hl) * 0.08));
-  box-shadow: inset 0 0 0 1px rgb(36 88 255 / calc(var(--hl) * 0.35));
+  background: rgb(var(--brand-rgb) / calc(var(--hl) * 0.08));
+  box-shadow: inset 0 0 0 1px rgb(var(--brand-rgb) / calc(var(--hl) * 0.35));
 }
 .s-bill__n {
   display: grid;
@@ -739,7 +777,7 @@
   border-radius: 50%;
   box-sizing: border-box;
   border: 1.5px solid var(--blue);
-  background: rgb(36 88 255 / calc(var(--hl) * 1));
+  background: rgb(var(--brand-rgb) / calc(var(--hl) * 1));
   color: color-mix(in srgb, #fff calc(var(--hl) * 100%), var(--blue-text));
   font-size: 0.72rem;
 }
@@ -765,7 +803,7 @@
   top: 0;
   height: 2px;
   background: var(--blue);
-  box-shadow: 0 10px 28px 2px rgb(36 88 255 / 0.28);
+  box-shadow: 0 10px 28px 2px rgb(var(--brand-rgb) / 0.28);
   opacity: 0;
   pointer-events: none;
 }
@@ -925,7 +963,7 @@
 .s-console__foot {
   margin: 0;
   padding: 0.75rem 1.25rem;
-  background: #fbf6ee;
+  background: #fbf7ef;
   color: var(--sim);
   font-size: 0.8rem;
 }
@@ -966,7 +1004,7 @@
   width: calc((100% - 8px) / var(--n));
   border-radius: 999px;
   background: #fff;
-  box-shadow: 0 1px 2px rgb(16 32 61 / 0.12), 0 6px 14px -8px rgb(16 32 61 / 0.3);
+  box-shadow: 0 1px 2px rgb(var(--ink-rgb) / 0.12), 0 6px 14px -8px rgb(var(--ink-rgb) / 0.3);
   transition: transform 260ms var(--ease-in-out);
 }
 .s-seg[data-instant] .s-seg__thumb {
@@ -1011,7 +1049,7 @@
 }
 .s-drop[data-over] {
   outline-color: var(--blue);
-  background: rgb(36 88 255 / 0.04);
+  background: rgb(var(--brand-rgb) / 0.04);
 }
 .s-drop__idle {
   display: grid;
@@ -1293,7 +1331,7 @@ select.s-input {
   padding-right: 2.5rem;
 }
 .s-input::placeholder {
-  color: #6b7891;
+  color: var(--ink-faint);
 }
 .s-input:focus-visible {
   outline: none;
@@ -1493,11 +1531,11 @@ select.s-input {
   stroke-width: 1.5;
 }
 .sv-ring {
-  stroke: rgb(16 32 61 / 0.14);
+  stroke: rgb(var(--ink-rgb) / 0.14);
   stroke-width: 1;
 }
 .sv-sweep {
-  fill: rgb(36 88 255 / 0.1);
+  fill: rgb(var(--brand-rgb) / 0.1);
 }
 .sv-dot,
 .sv-blip {
@@ -1573,11 +1611,11 @@ select.s-input {
   margin: 0.5rem 0 1rem;
 }
 .s-aud__grid {
-  stroke: rgb(16 32 61 / 0.08);
+  stroke: rgb(var(--ink-rgb) / 0.08);
   stroke-width: 1;
 }
 .s-aud__band {
-  fill: rgb(36 88 255 / 0.06);
+  fill: rgb(var(--brand-rgb) / 0.06);
 }
 .s-aud__lead,
 .s-aud__sky {
@@ -2112,7 +2150,7 @@ select.s-input {
 }
 .s-collab .s-input::placeholder,
 .s-close .s-input::placeholder {
-  color: #93a3bf;
+  color: #8ea79b;
 }
 .s-collab .s-input:focus-visible,
 .s-close .s-input:focus-visible {

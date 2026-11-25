@@ -33,7 +33,7 @@ export function SignatureHero({ t }: { t: Dictionary }) {
   );
 
   return (
-    <section ref={root} className="g-hero" data-fly data-tone="navy" data-ready={ready || undefined} aria-labelledby="g-hero-title">
+    <section ref={root} className="g-hero" data-fly data-ready={ready || undefined} aria-labelledby="g-hero-title">
       <div className="g-hero__stage">
         <div className="g-hero__poster" aria-hidden="true" />
         <RingScene className="g-hero__scene" onReady={() => setReady(true)} />
@@ -55,7 +55,7 @@ export function SignatureHero({ t }: { t: Dictionary }) {
           <div className="g-hero__aside">
             <p className="g-hero__sub">{t.hero.subtitle}</p>
             <div className="g-hero__actions">
-              <a href="#savenergy" className="g-btn g-btn--light" onClick={() => openSavEnergy("upload")}>
+              <a href="#savenergy" className="g-btn g-btn--brand" onClick={() => openSavEnergy("upload")}>
                 {t.hero.primary}
               </a>
               <a href="#serveis" className="g-btn g-btn--glass">
