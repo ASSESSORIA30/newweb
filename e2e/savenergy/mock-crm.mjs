@@ -14,6 +14,14 @@ const fields = [
   { key: "energyPrice.P1", value: 0.24, unit: "€/kWh", status: "llegit" }, { key: "energyPrice.P2", value: 0.19, unit: "€/kWh", status: "llegit" }, { key: "energyPrice.P3", value: 0.15, unit: "€/kWh", status: "llegit" },
   { key: "powerPrice.P1", value: 0.11, unit: "€/kW·dia", status: "llegit" }, { key: "powerPrice.P2", value: 0.06, unit: "€/kW·dia", status: "llegit" },
 ];
+// Escenari «hores promocionades» (sessions obertes amb utm_source=promo): dues franges comercials, sense preus per període d'accés.
+const promoFields = [
+  ...fields.filter((f) => !f.key.startsWith("energyPrice.") && f.key !== "annualKwh").map((f) => ({ ...f, status: "llegit" })),
+  { key: "priceMode", value: "hores_promocionades", unit: null, status: "llegit" },
+  { key: "promoKwh", value: 212.72, unit: "kWh", status: "llegit" }, { key: "promoPrice", value: 0.1349, unit: "€/kWh", status: "llegit" },
+  { key: "restKwh", value: 369.48, unit: "kWh", status: "llegit" }, { key: "restPrice", value: 0.26371, unit: "€/kWh", status: "llegit" },
+];
+const promoSessions = new Set();
 const state = (status, extra = {}) => ({ status, readStatus: "ok", cupsMasked: "ES••••••••••••5678JN", fields, missing: [], missingPrices: [], toConfirm: fields.filter((f) => f.status === "per_revisar").map((f) => f.key), outcome: null, contactRequested: false, ...extra });
 const outcome = { kind: "resultat", asOf: "2026-11-25", current: { annualCost: 1079.09, monthlyCost: 89.92 }, basis: "anualitzat", supplierDisplay: "anonim", hypotheses: ["Consum anualitzat a partir d'una factura de 30 dies (×12.17); no té en compte l'estacionalitat."],
   alternatives: [{ rank: 1, label: "Comercialitzadora A", product: null, contractType: "periodes", permanence: "Sense permanència", priceGuaranteeMonths: 12, conditions: ["Preus diferents per franges horàries", "Preu garantit 12 mesos", "Oferta vigent fins al 2027-06-30"], annualCost: 715.13, monthlyCost: 59.59, saving: 363.96, savingMonthly: 30.33, savingPct: 33.73, validTo: "2027-06-30" },
@@ -38,10 +46,11 @@ http.createServer((req, res) => {
     seen.add(nonce);
     const data = body ? JSON.parse(body) : {};
     log.push({ op: m[1], sigOk: true, ip: req.headers["x-a30-client-ip"], data });
-    if (m[1] === "session") return send(200, { session: randomUUID(), access: "A".repeat(43), expiresAt: new Date(Date.now() + 864e5).toISOString(), maxBytes: 8388608, upload: { url: `http://localhost:${PORT}/upload/${randomUUID()}`, method: "PUT", headers: { "content-type": data.mime, "x-upsert": "false" } } });
+    const promo = promoSessions.has(data.session) ? { fields: promoFields, toConfirm: [] } : {};
+    if (m[1] === "session") { const id = randomUUID(); if (data.utm?.source === "promo") promoSessions.add(id); return send(200, { session: id, access: "A".repeat(43), expiresAt: new Date(Date.now() + 864e5).toISOString(), maxBytes: 8388608, upload: { url: `http://localhost:${PORT}/upload/${randomUUID()}`, method: "PUT", headers: { "content-type": data.mime, "x-upsert": "false" } } }); }
     if (m[1] === "analyse") return send(200, state("analitzant"));
-    if (m[1] === "status") { polls += 1; return send(200, polls < 2 ? state("analitzant") : state("llegida")); }
-    if (m[1] === "confirm") return send(200, state("resultat", { outcome, toConfirm: [] }));
+    if (m[1] === "status") { polls += 1; return send(200, polls < 2 ? state("analitzant") : state("llegida", promo)); }
+    if (m[1] === "confirm") return send(200, state("resultat", { ...promo, outcome, toConfirm: [] }));
     if (m[1] === "lead") return send(200, { ok: true, reference: "ABCD1234" });
     if (m[1] === "visit") return send(200, { ok: true });
     send(404, { error: "no_trobat" });

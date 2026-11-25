@@ -57,6 +57,7 @@ for (const [lang, opts, tag] of [["", { viewport: { width: 1440, height: 900 } }
   const flagged = await p.locator(".s-live__grid .s-field[data-invalid] input").evaluateAll((els) => els.map((e) => e.id.replace("sev-", "")).sort());
   ok(JSON.stringify(flagged) === JSON.stringify(["annualKwh", "kwh.P1"]), `${tag} · camps per revisar = els del CRM (${flagged.join(", ")})`);
   ok((await p.locator(".s-live__grid .s-field__hint").count()) === 2, `${tag} · cada camp per revisar porta l'avís`);
+  ok((await p.locator("#sev-priceMode").inputValue()) === "periodes" && (await p.locator('[id="sev-energyPrice.P1"]').count()) === 1 && (await p.locator('[id="sev-promoKwh"]').count()) === 0, `${tag} · modalitat «per franges»: preus P1–P3 i cap camp d'hores promocionades`);
   ok((await p.locator('[id="sev-annualKwh"]').inputValue()) === "2253" && (await p.locator('[id="sev-kwh.P2"]').inputValue()) === "70", `${tag} · valors llegits presentats per confirmar`);
   const confirmText = await p.locator(".s-live__panel").innerText();
   ok(/ES•+5678JN/.test(confirmText), `${tag} · CUPS emmascarat`);
@@ -130,18 +131,60 @@ for (const [lang, opts, tag] of [["", { viewport: { width: 1440, height: 900 } }
   await ctx.close();
 }
 
+// hores promocionades: el formulari mostra les dues franges comercials ja llegides, no tres preus buits, i es pot corregir la modalitat
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const p = await ctx.newPage();
+  const errs = []; p.on("pageerror", (e) => errs.push(e.message));
+  await p.route("https://challenges.cloudflare.com/**", (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: TURNSTILE }));
+  await p.addInitScript(() => localStorage.setItem("a30.consent.v1", JSON.stringify({ v: 1, analytics: false, at: "x" })));
+  await p.goto(`http://localhost:${WEB}/?utm_source=promo`, { waitUntil: "networkidle" });
+  await p.evaluate(() => window.dispatchEvent(new CustomEvent("a30:savenergy-mode", { detail: "upload" })));
+  const panel = p.locator(".s-live").first();
+  for (const cb of await panel.locator("input[type=checkbox]").all()) await cb.check();
+  await panel.locator("input[type=file]").setInputFiles(PDF);
+  await p.waitForSelector(".s-live__grid", { timeout: 15000 });
+  const ids = () => p.locator(".s-live__grid input").evaluateAll((els) => els.map((e) => e.id.replace("sev-", "")));
+  const v = (k) => p.locator(`[id="sev-${k}"]`).inputValue();
+  ok((await p.locator("#sev-priceMode").inputValue()) === "hores_promocionades", "promo · modalitat detectada: hores promocionades");
+  let shown = await ids();
+  ok(["promoKwh", "promoPrice", "restKwh", "restPrice"].every((k) => shown.includes(k)) && !shown.some((k) => k.startsWith("energyPrice.")), `promo · es mostren les franges comercials i cap preu P1–P3 (${shown.join(", ")})`);
+  ok((await v("promoKwh")) === "212,72" && (await v("promoPrice")) === "0,1349" && (await v("restKwh")) === "369,48" && (await v("restPrice")) === "0,26371", "promo · consums i preus comercials ja omplerts amb la lectura");
+  ok((await p.locator("[data-mode-note]").count()) === 1 && (await p.locator(".s-live__grid .s-field[data-invalid]").count()) === 0, "promo · explicació de la modalitat i cap camp per introduir a mà");
+  ok((await v("kwh.P1")) === "80" && (await v("kwh.P3")) === "110", "promo · els consums per períodes d'accés es conserven a part");
+  // correcció manual de la modalitat: cada opció mostra exclusivament els seus camps
+  await p.selectOption("#sev-priceMode", "fix24h");
+  shown = await ids();
+  ok(shown.includes("energyPrice.24h") && !shown.includes("promoKwh") && !shown.includes("energyPrice.P1"), "promo · «fix 24 h» mostra un únic camp de preu");
+  await p.selectOption("#sev-priceMode", "periodes");
+  shown = await ids();
+  ok(["energyPrice.P1", "energyPrice.P2", "energyPrice.P3"].every((k) => shown.includes(k)) && !shown.includes("promoKwh") && !shown.includes("energyPrice.24h"), "promo · «per franges» mostra P1, P2 i P3");
+  await p.selectOption("#sev-priceMode", "desconegut");
+  ok(!(await ids()).some((k) => /energyPrice|promo|rest/.test(k)), "promo · «no ho sé» no demana cap preu d'energia");
+  await p.selectOption("#sev-priceMode", "hores_promocionades");
+  ok((await v("promoPrice")) === "0,1349", "promo · en tornar a la modalitat detectada es conserven els valors llegits");
+  ok((await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)), "promo · sense desbordament horitzontal");
+  await p.locator(".s-live__panel button[type=submit]").click();
+  await p.waitForSelector(".s-res__num");
+  ok(errs.length === 0, `promo · sense errors de pàgina ${errs.join("|")}`);
+  await ctx.close();
+}
+
 const log = await (await fetch(`http://localhost:${CRM}/__log`)).json();
 const ops = log.filter((x) => x.op !== "upload");
 ok(ops.length > 0 && ops.every((x) => x.sigOk), "totes les peticions al CRM porten una signatura vàlida");
 const sess = ops.find((x) => x.op === "session");
+const pv = ops.filter((x) => x.op === "confirm").map((x) => x.data.values).find((x) => x.promoKwh != null);
+ok(pv && pv.promoKwh === 212.72 && pv.promoPrice === 0.1349 && pv.restKwh === 369.48 && pv.restPrice === 0.26371 && pv["energyPrice.P1"] === null && pv["energyPrice.P3"] === null, "promo · la confirmació envia les franges comercials i cap preu assignat a P1–P3");
 ok(sess && !("turnstileToken" in sess.data) && sess.data.turnstile === "verificat", "Turnstile validat al servidor de la web i no reenviat");
 ok(sess.data.ref === "col. c34" && sess.data.utm?.source === "prova", "codi de col·laborador històric i UTM reenviats");
 ok(sess.data.consents.privacitat_servei === true && sess.data.consents.factura_temporal === true && sess.data.consentVersion === "2026-11-sev1", "consentiments i versió enviats");
-const confirms = ops.filter((x) => x.op === "confirm");
+const confirms = ops.filter((x) => x.op === "confirm" && x.data.values.promoKwh == null);
+ok(confirms.every((x) => x.data.values.promoKwh === null && x.data.values["energyPrice.P1"] === 0.24), "per franges · s'envien P1–P3 i cap franja comercial");
 ok(confirms.length === 3 && confirms.every((x) => x.data.values.annualKwh === 2253 && x.data.values["kwh.P1"] === 80), "la confirmació envia tots els valors, inclòs el consum anual");
 const lead = ops.find((x) => x.op === "lead");
 ok(lead && lead.data.phone === "600111222" && lead.data.acceptCommercial === false && /^[0-9a-f-]{36}$/.test(lead.data.idempotencyKey), "lead: telèfon, clau d'idempotència i consentiment");
-ok(log.filter((x) => x.op === "upload").length === 3, "la factura es puja directament a l'URL signada");
+ok(log.filter((x) => x.op === "upload").length === 4, "la factura es puja directament a l'URL signada");
 
 await browser.close();
 stop();
