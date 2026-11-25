@@ -8,6 +8,7 @@ const seen = new Set();
 const log = [];
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const fields = [
+  { key: "customerKind", value: "particular", unit: null, status: "llegit" }, { key: "periodFrom", value: "2026-09-16", unit: "data", status: "llegit" }, { key: "periodTo", value: "2026-10-19", unit: "data", status: "llegit" },
   { key: "accessTariff", value: "2.0TD", unit: null, status: "llegit" }, { key: "days", value: 33, unit: "dies", status: "llegit" }, { key: "annualKwh", value: 2253, unit: "kWh", status: "per_revisar" },
   { key: "kwh.P1", value: 80, unit: "kWh", status: "per_revisar" }, { key: "kwh.P2", value: 70, unit: "kWh", status: "llegit" }, { key: "kwh.P3", value: 110, unit: "kWh", status: "llegit" },
   { key: "kw.P1", value: 4.6, unit: "kW", status: "llegit" }, { key: "kw.P2", value: 4.6, unit: "kW", status: "llegit" },
@@ -22,6 +23,14 @@ const promoFields = [
   { key: "restKwh", value: 369.48, unit: "kWh", status: "llegit" }, { key: "restPrice", value: 0.26371, unit: "€/kWh", status: "llegit" },
 ];
 const promoSessions = new Set();
+// Escenari «factura antiga, indexada i titular dubtós» (utm_source=antiga): període antic per revisar, tipus de client per
+// confirmar, servei recurrent de la comercialitzadora i resultat només orientatiu, amb advertència.
+const oldFields = [
+  ...fields.filter((f) => !["annualKwh", "customerKind", "periodFrom", "periodTo"].includes(f.key)).map((f) => ({ ...f, status: "llegit" })),
+  { key: "customerKind", value: "empresa", unit: null, status: "per_revisar" }, { key: "periodFrom", value: "2024-01-05", unit: "data", status: "llegit" }, { key: "periodTo", value: "2024-02-04", unit: "data", status: "llegit" },
+  { key: "priceMode", value: "indexat", unit: null, status: "llegit" }, { key: "serviceFeeEur", value: 5.01, unit: "€", status: "llegit" },
+];
+const oldSessions = new Set();
 const state = (status, extra = {}) => ({ status, readStatus: "ok", cupsMasked: "ES••••••••••••5678JN", fields, missing: [], missingPrices: [], toConfirm: fields.filter((f) => f.status === "per_revisar").map((f) => f.key), outcome: null, contactRequested: false, ...extra });
 const outcome = { kind: "resultat", asOf: "2026-11-25", current: { annualCost: 1079.09, monthlyCost: 89.92 }, basis: "anualitzat", supplierDisplay: "anonim", hypotheses: ["Consum anualitzat a partir d'una factura de 30 dies (×12.17); no té en compte l'estacionalitat."],
   alternatives: [{ rank: 1, label: "Comercialitzadora A", product: null, contractType: "periodes", permanence: "Sense permanència", priceGuaranteeMonths: 12, conditions: ["Preus diferents per franges horàries", "Preu garantit 12 mesos", "Oferta vigent fins al 2027-06-30"], annualCost: 715.13, monthlyCost: 59.59, saving: 363.96, savingMonthly: 30.33, savingPct: 33.73, validTo: "2027-06-30" },
@@ -46,11 +55,12 @@ http.createServer((req, res) => {
     seen.add(nonce);
     const data = body ? JSON.parse(body) : {};
     log.push({ op: m[1], sigOk: true, ip: req.headers["x-a30-client-ip"], data });
-    const promo = promoSessions.has(data.session) ? { fields: promoFields, toConfirm: [] } : {};
-    if (m[1] === "session") { const id = randomUUID(); if (data.utm?.source === "promo") promoSessions.add(id); return send(200, { session: id, access: "A".repeat(43), expiresAt: new Date(Date.now() + 864e5).toISOString(), maxBytes: 8388608, upload: { url: `http://localhost:${PORT}/upload/${randomUUID()}`, method: "PUT", headers: { "content-type": data.mime, "x-upsert": "false" } } }); }
+    const old = oldSessions.has(data.session);
+    const promo = promoSessions.has(data.session) ? { fields: promoFields, toConfirm: [] } : old ? { fields: oldFields, toConfirm: ["customerKind"], notice: "factura_antiga" } : {};
+    if (m[1] === "session") { const id = randomUUID(); if (data.utm?.source === "promo") promoSessions.add(id); if (data.utm?.source === "antiga") oldSessions.add(id); return send(200, { session: id, access: "A".repeat(43), expiresAt: new Date(Date.now() + 864e5).toISOString(), maxBytes: 8388608, upload: { url: `http://localhost:${PORT}/upload/${randomUUID()}`, method: "PUT", headers: { "content-type": data.mime, "x-upsert": "false" } } }); }
     if (m[1] === "analyse") return send(200, state("analitzant"));
     if (m[1] === "status") { polls += 1; return send(200, polls < 2 ? state("analitzant") : state("llegida", promo)); }
-    if (m[1] === "confirm") return send(200, state("resultat", { ...promo, outcome, toConfirm: [] }));
+    if (m[1] === "confirm") return send(200, state("resultat", { ...promo, notice: null, outcome: old ? { ...outcome, stale: { periodTo: data.values.periodTo }, variable: true } : outcome, toConfirm: [] }));
     if (m[1] === "lead") return send(200, { ok: true, reference: "ABCD1234" });
     if (m[1] === "visit") return send(200, { ok: true });
     send(404, { error: "no_trobat" });

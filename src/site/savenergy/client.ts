@@ -4,13 +4,13 @@
  * l'URL signada d'un sol fitxer que retorna el CRM. Res no es desa al navegador: la sessió viu en memòria.
  */
 export const CONSENT_VERSION = "2026-11-sev1";
-export type PublicFieldKey = "accessTariff" | "customerKind" | "days" | "annualKwh" | "energyDiscountPct" | "kwh.P1" | "kwh.P2" | "kwh.P3" | "kw.P1" | "kw.P2" | "energyPrice.P1" | "energyPrice.P2" | "energyPrice.P3" | "powerPrice.P1" | "powerPrice.P2" | "priceMode" | "promoKwh" | "promoPrice" | "restKwh" | "restPrice";
+export type PublicFieldKey = "accessTariff" | "customerKind" | "days" | "annualKwh" | "energyDiscountPct" | "kwh.P1" | "kwh.P2" | "kwh.P3" | "kw.P1" | "kw.P2" | "energyPrice.P1" | "energyPrice.P2" | "energyPrice.P3" | "powerPrice.P1" | "powerPrice.P2" | "priceMode" | "promoKwh" | "promoPrice" | "restKwh" | "restPrice" | "periodFrom" | "periodTo" | "serviceFeeEur";
 export interface PublicField { key: PublicFieldKey; value: string | number | null; unit: string | null; status: "llegit" | "per_revisar" | "pendent" | "revisat" }
 export interface Alternative { rank: number; label: string; product: string | null; contractType: string; permanence: string; priceGuaranteeMonths: number | null; conditions: string[]; annualCost: number; monthlyCost: number; saving: number; savingMonthly: number; savingPct: number; validTo: string | null }
 export type Outcome =
-  | { kind: "resultat"; asOf: string; current: { annualCost: number; monthlyCost: number }; alternatives: Alternative[]; hypotheses: string[]; supplierDisplay: "anonim" | "nom"; basis: "anual" | "anualitzat" }
+  | { kind: "resultat"; asOf: string; current: { annualCost: number; monthlyCost: number }; alternatives: Alternative[]; hypotheses: string[]; supplierDisplay: "anonim" | "nom"; basis: "anual" | "anualitzat"; stale?: { periodTo: string | null } | null; variable?: boolean }
   | { kind: "assessor"; reason: string; detail?: string | null; current?: { annualCost: number; monthlyCost: number } | null; hypotheses?: string[] };
-export interface SessionState { status: string; readStatus: string | null; cupsMasked: string | null; fields: PublicField[]; missing: string[]; missingPrices: string[]; toConfirm: string[]; outcome: Outcome | null; contactRequested: boolean }
+export interface SessionState { status: string; readStatus: string | null; cupsMasked: string | null; fields: PublicField[]; missing: string[]; missingPrices: string[]; toConfirm: string[]; notice?: "periode_curt" | "factura_antiga" | null; outcome: Outcome | null; contactRequested: boolean }
 
 export class SavError extends Error { constructor(public code: string, public status: number) { super(code); } }
 
@@ -32,7 +32,7 @@ export const api = {
     post<Session>("session", { ...b, consentVersion: CONSENT_VERSION }),
   analyse: (s: Session) => post<SessionState>("analyse", { session: s.session, access: s.access }),
   status: (s: Session) => post<SessionState>("status", { session: s.session, access: s.access }),
-  confirm: (s: Session, values: Record<string, number | null>) => post<SessionState>("confirm", { session: s.session, access: s.access, values }),
+  confirm: (s: Session, values: Record<string, number | string | null>) => post<SessionState>("confirm", { session: s.session, access: s.access, values }),
   lead: (s: Session, c: { idempotencyKey: string; name: string; phone: string; email: string; acceptCommercial: boolean; website: string }) => post<{ ok: true; reference?: string; duplicate?: boolean }>("lead", { session: s.session, access: s.access, ...c }),
   visit: () => post<{ ok: true }>("visit", {}).catch(() => undefined),
 };

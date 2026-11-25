@@ -2092,6 +2092,27 @@ label.s-cookie__cat {
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: 0.9rem 1rem;
 }
+.s-live__grid .s-input[type="date"] {
+  block-size: 3.25rem;
+  padding-block: 0;
+}
+.s-live__note--warn {
+  border-left: 3px solid var(--sim);
+  padding-left: 0.8rem;
+}
+.s-res__warn,
+.s-res__variable {
+  margin: 0.9rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  max-width: 62ch;
+}
+.s-res__warn {
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  border: 1.5px solid currentColor;
+  font-weight: 600;
+}
 .s-live__mode {
   max-width: 30rem;
 }

@@ -170,21 +170,52 @@ for (const [lang, opts, tag] of [["", { viewport: { width: 1440, height: 900 } }
   await ctx.close();
 }
 
+// factura antiga i indexada, amb titular dubtós: es mostra el període per corregir-lo i el resultat és només orientatiu
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const p = await ctx.newPage();
+  const errs = []; p.on("pageerror", (e) => errs.push(e.message));
+  await p.route("https://challenges.cloudflare.com/**", (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: TURNSTILE }));
+  await p.addInitScript(() => localStorage.setItem("a30.consent.v1", JSON.stringify({ v: 1, analytics: false, at: "x" })));
+  await p.goto(`http://localhost:${WEB}/?utm_source=antiga`, { waitUntil: "networkidle" });
+  await p.evaluate(() => window.dispatchEvent(new CustomEvent("a30:savenergy-mode", { detail: "upload" })));
+  const panel = p.locator(".s-live").first();
+  for (const cb of await panel.locator("input[type=checkbox]").all()) await cb.check();
+  await panel.locator("input[type=file]").setInputFiles(PDF);
+  await p.waitForSelector(".s-live__grid", { timeout: 15000 });
+  ok((await p.locator('[data-notice="factura_antiga"]').count()) === 1 && /antiga/.test(await p.locator("[data-notice]").innerText()), "antiga · avís de factura antiga abans de comparar (no es bloqueja)");
+  ok((await p.locator("#sev-periodFrom").inputValue()) === "2024-01-05" && (await p.locator("#sev-periodTo").inputValue()) === "2024-02-04", "antiga · es mostra el període detectat, editable");
+  ok((await p.locator("#sev-customerKind").count()) === 1 && (await p.locator("#sev-customerKind").inputValue()) === "empresa", "antiga · titular dubtós: es demana confirmar el tipus de client");
+  ok((await p.locator("#sev-priceMode").inputValue()) === "indexat" && (await p.locator('[id="sev-serviceFeeEur"]').inputValue()) === "5,01", "antiga · tarifa indexada i servei recurrent llegits");
+  await p.selectOption("#sev-customerKind", "particular");
+  await p.locator(".s-live__panel button[type=submit]").click();
+  await p.waitForSelector(".s-res__num");
+  const hero = await p.locator(".s-res").innerText();
+  ok(/Estimació orientativa amb una factura antiga/.test(hero) && (await p.locator("[data-stale]").count()) === 1 && !/Hem trobat una oferta millor/.test(hero), "antiga · resultat presentat com a estimació orientativa, amb advertència");
+  ok(!/d'estalvi estimat anual/.test(hero) && /amb els preus d'aquella factura/.test(hero), "antiga · no es presenta com un estalvi actual");
+  ok((await p.locator("[data-variable]").count()) === 1 && /variable/.test(await p.locator("[data-variable]").innerText()), "antiga · el cost actual indexat s'identifica com a variable");
+  ok((await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)) && errs.length === 0, `antiga · sense desbordament ni errors ${errs.join("|")}`);
+  await ctx.close();
+}
+
 const log = await (await fetch(`http://localhost:${CRM}/__log`)).json();
 const ops = log.filter((x) => x.op !== "upload");
 ok(ops.length > 0 && ops.every((x) => x.sigOk), "totes les peticions al CRM porten una signatura vàlida");
 const sess = ops.find((x) => x.op === "session");
+const ov = ops.filter((x) => x.op === "confirm").map((x) => x.data.values).find((x) => x.periodTo === "2024-02-04");
+ok(ov && ov.periodFrom === "2024-01-05" && ov.customerKind === "particular" && ov.serviceFeeEur === 5.01, "antiga · la confirmació envia el període, el tipus de client confirmat i el servei");
+ok(ops.filter((x) => x.op === "confirm" && x.data.values.periodTo !== "2024-02-04").every((x) => !("customerKind" in x.data.values) && x.data.values.periodTo === "2026-10-19"), "titular identificat: no es demana ni s'envia el tipus de client; el període llegit es confirma");
 const pv = ops.filter((x) => x.op === "confirm").map((x) => x.data.values).find((x) => x.promoKwh != null);
 ok(pv && pv.promoKwh === 212.72 && pv.promoPrice === 0.1349 && pv.restKwh === 369.48 && pv.restPrice === 0.26371 && pv["energyPrice.P1"] === null && pv["energyPrice.P3"] === null, "promo · la confirmació envia les franges comercials i cap preu assignat a P1–P3");
 ok(sess && !("turnstileToken" in sess.data) && sess.data.turnstile === "verificat", "Turnstile validat al servidor de la web i no reenviat");
 ok(sess.data.ref === "col. c34" && sess.data.utm?.source === "prova", "codi de col·laborador històric i UTM reenviats");
 ok(sess.data.consents.privacitat_servei === true && sess.data.consents.factura_temporal === true && sess.data.consentVersion === "2026-11-sev1", "consentiments i versió enviats");
-const confirms = ops.filter((x) => x.op === "confirm" && x.data.values.promoKwh == null);
+const confirms = ops.filter((x) => x.op === "confirm" && x.data.values.promoKwh == null && x.data.values.periodTo !== "2024-02-04");
 ok(confirms.every((x) => x.data.values.promoKwh === null && x.data.values["energyPrice.P1"] === 0.24), "per franges · s'envien P1–P3 i cap franja comercial");
 ok(confirms.length === 3 && confirms.every((x) => x.data.values.annualKwh === 2253 && x.data.values["kwh.P1"] === 80), "la confirmació envia tots els valors, inclòs el consum anual");
 const lead = ops.find((x) => x.op === "lead");
 ok(lead && lead.data.phone === "600111222" && lead.data.acceptCommercial === false && /^[0-9a-f-]{36}$/.test(lead.data.idempotencyKey), "lead: telèfon, clau d'idempotència i consentiment");
-ok(log.filter((x) => x.op === "upload").length === 4, "la factura es puja directament a l'URL signada");
+ok(log.filter((x) => x.op === "upload").length === 5, "la factura es puja directament a l'URL signada");
 
 await browser.close();
 stop();

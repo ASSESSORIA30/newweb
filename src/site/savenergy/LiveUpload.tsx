@@ -209,17 +209,28 @@ function Confirm({ t, st, session, onDone, onError, headRef }: { t: Dictionary; 
   };
   const [mode, setMode] = useState<PriceMode>(detect);
   const str = (k: string) => (byKey.get(k)?.value == null ? "" : String(byKey.get(k)!.value).replace(".", ","));
-  const [vals, setVals] = useState<Record<string, string>>(() => ({ ...Object.fromEntries([...BASE_KEYS, ...PERIOD_PRICE_KEYS, ...BAND_KEYS, ...TAIL_KEYS].map((k) => [k, str(k)])), [FLAT_KEY]: str("energyPrice.P1") }));
+  const [vals, setVals] = useState<Record<string, string>>(() => ({ ...Object.fromEntries([...BASE_KEYS, ...PERIOD_PRICE_KEYS, ...BAND_KEYS, ...TAIL_KEYS, "serviceFeeEur"].map((k) => [k, str(k)])), [FLAT_KEY]: str("energyPrice.P1") }));
+  // període de facturació detectat (editable) i tipus de titular (només es demana si el lector no l'ha pogut assegurar)
+  const iso = (k: string) => { const v = byKey.get(k)?.value; return typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : ""; };
+  const [dates, setDates] = useState({ periodFrom: iso("periodFrom"), periodTo: iso("periodTo") });
+  const kindField = byKey.get("customerKind");
+  const askKind = !kindField || kindField.value == null || kindField.status === "per_revisar";
+  const [kind, setKind] = useState<"particular" | "empresa">(kindField?.value === "empresa" ? "empresa" : "particular");
+  const hasService = byKey.get("serviceFeeEur")?.value != null;
   const [busy, setBusy] = useState(false);
   const unit = (k: string) => (k === "annualKwh" ? L.units.kwh : k === "energyDiscountPct" ? "%" : (L.units as Record<string, string>)[k.split(".")[0]] ?? "");
   const tariff = byKey.get("accessTariff")?.value;
-  const shown = [...BASE_KEYS, ...ENERGY_KEYS[mode], ...TAIL_KEYS];
+  const tail = hasService ? [...TAIL_KEYS, "serviceFeeEur"] : [...TAIL_KEYS];
+  const shown = [...BASE_KEYS, ...ENERGY_KEYS[mode], ...tail];
   const num = (k: string) => { const v = (vals[k] ?? "").trim().replace(",", "."); const x = v === "" ? null : Number(v); return x != null && Number.isFinite(x) ? x : null; };
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const values: Record<string, number | null> = {};
-    for (const k of [...BASE_KEYS, ...TAIL_KEYS]) values[k] = num(k);
+    const values: Record<string, number | string | null> = {};
+    for (const k of [...BASE_KEYS, ...tail]) values[k] = num(k);
+    values.periodFrom = dates.periodFrom || null;
+    values.periodTo = dates.periodTo || null;
+    if (askKind) values.customerKind = kind;
     // només s'envien els preus de la modalitat triada; els de les altres modalitats s'envien buits perquè no es barregin
     for (const k of PERIOD_PRICE_KEYS) values[k] = mode === "fix24h" ? num(FLAT_KEY) : mode === "periodes" || mode === "indexat" ? num(k) : null;
     for (const k of BAND_KEYS) values[k] = mode === "hores_promocionades" ? num(k) : null;
@@ -243,10 +254,27 @@ function Confirm({ t, st, session, onDone, onError, headRef }: { t: Dictionary; 
         <span id="sev-priceMode-h" className="s-field__hint">{L.mode.hint}</span>
       </div>
       {L.mode.notes[mode] ? <p className="s-live__note" data-mode-note>{L.mode.notes[mode]}</p> : null}
+      {st.notice && L.notice[st.notice] ? <p className="s-live__note s-live__note--warn" role="status" data-notice={st.notice}>{L.notice[st.notice]}</p> : null}
       <div className="s-live__grid">
+        {(["periodFrom", "periodTo"] as const).map((k) => (
+          <div key={k} className="s-field" data-invalid={st.notice ? "" : undefined}>
+            <label htmlFor={`sev-${k}`}>{label(k)}</label>
+            <input id={`sev-${k}`} type="date" className="s-input" value={dates[k]} onChange={(e) => setDates({ ...dates, [k]: e.target.value })} />
+          </div>
+        ))}
+        {askKind ? (
+          <div className="s-field" data-invalid="">
+            <label htmlFor="sev-customerKind">{label("customerKind")}</label>
+            <select id="sev-customerKind" className="s-input" value={kind} onChange={(e) => setKind(e.target.value as "particular" | "empresa")} aria-describedby="sev-customerKind-h">
+              <option value="particular">{L.kind.particular}</option>
+              <option value="empresa">{L.kind.empresa}</option>
+            </select>
+            <span id="sev-customerKind-h" className="s-field__hint">{L.kind.hint}</span>
+          </div>
+        ) : null}
         {shown.map((k) => {
           const f: PublicField | undefined = byKey.get(k === FLAT_KEY ? "energyPrice.P1" : k);
-          const check = f?.status === "per_revisar";
+          const check = f?.status === "per_revisar" || (k === "days" && !!st.notice);
           return (
             <div key={k} className="s-field" data-invalid={check ? "" : undefined}>
               <label htmlFor={`sev-${k}`}>{label(k)} <span className="s-field__opt">({unit(k)})</span></label>
@@ -296,13 +324,15 @@ function Result({ t, o, headRef, locale, cta }: { t: Dictionary; o: Extract<Outc
     <div className="s-live__result">
       <section className="s-res" aria-labelledby="s-res-title">
         <div className="s-res__top">
-          <h3 id="s-res-title" ref={headRef} tabIndex={-1} className="s-res__kicker">{L.heroTitle}</h3>
-          {estimate ? <span className="s-res__tag">{L.orientative}</span> : null}
+          <h3 id="s-res-title" ref={headRef} tabIndex={-1} className="s-res__kicker">{o.stale ? L.stale.title : L.heroTitle}</h3>
+          {o.stale ? <span className="s-res__tag s-res__tag--warn">{L.stale.tag}</span> : estimate ? <span className="s-res__tag">{L.orientative}</span> : null}
+          {o.variable ? <span className="s-res__tag">{L.variable.tag}</span> : null}
         </div>
+        {o.stale ? <p className="s-res__warn" role="note" data-stale>{L.stale.warning}</p> : null}
         <p className="s-res__figure">
           <span className="s-res__num" aria-hidden="true">{eur(counted)}</span>
           <span className="sr-only">{eur(best.saving)}</span>
-          <span className="s-res__unit">{L.heroSaving}</span>
+          <span className="s-res__unit">{o.stale ? L.stale.saving : L.heroSaving}</span>
         </p>
         <ul className="s-res__facts">
           <li><b>{eur(best.savingMonthly)}</b> {L.lessPerMonth}</li>
@@ -312,6 +342,7 @@ function Result({ t, o, headRef, locale, cta }: { t: Dictionary; o: Extract<Outc
           <div><dt>{L.currentCostShort}</dt><dd>{eur(o.current.annualCost)}{L.perYear}</dd></div>
           <div><dt>{L.newCostShort}</dt><dd>{eur(best.annualCost)}{L.perYear}</dd></div>
         </dl>
+        {o.variable ? <p className="s-res__variable" data-variable>{L.variable.note}</p> : null}
       </section>
 
       <ol className="s-offers" aria-label={L.offersLabel}>

@@ -122,8 +122,20 @@ const ca = {
       missingPrices: "No hem pogut llegir els teus preus actuals. Si els afegeixes, podrem calcular l'estalvi; si no, un assessor ho revisarà amb tu.",
       cups: "CUPS",
       confirm: "Confirma i compara",
-      fields: { "energyPrice.24h": "Preu de l'energia (únic, 24 h)", promoKwh: "Consum en hores promocionades", promoPrice: "Preu en hores promocionades", restKwh: "Consum en hores no promocionades", restPrice: "Preu en hores no promocionades", accessTariff: "Tarifa d'accés", days: "Dies facturats", annualKwh: "Consum de l'últim any (si surt a la factura)", "kwh.P1": "Consum P1 (punta)", "kwh.P2": "Consum P2 (pla)", "kwh.P3": "Consum P3 (vall)", "kw.P1": "Potència P1", "kw.P2": "Potència P2", "energyPrice.P1": "Preu energia P1", "energyPrice.P2": "Preu energia P2", "energyPrice.P3": "Preu energia P3", energyDiscountPct: "Descompte sobre l'energia (si n'hi ha)", "powerPrice.P1": "Preu potència P1", "powerPrice.P2": "Preu potència P2" },
-      units: { days: "dies", kwh: "kWh", kw: "kW", energyPrice: "€/kWh", powerPrice: "€/kW·dia", promoKwh: "kWh", restKwh: "kWh", promoPrice: "€/kWh", restPrice: "€/kWh" },
+      fields: { periodFrom: "Inici del període facturat", periodTo: "Fi del període facturat", serviceFeeEur: "Serveis de la comercialitzadora en aquesta factura", customerKind: "Titular del contracte", "energyPrice.24h": "Preu de l'energia (únic, 24 h)", promoKwh: "Consum en hores promocionades", promoPrice: "Preu en hores promocionades", restKwh: "Consum en hores no promocionades", restPrice: "Preu en hores no promocionades", accessTariff: "Tarifa d'accés", days: "Dies facturats", annualKwh: "Consum de l'últim any (si surt a la factura)", "kwh.P1": "Consum P1 (punta)", "kwh.P2": "Consum P2 (pla)", "kwh.P3": "Consum P3 (vall)", "kw.P1": "Potència P1", "kw.P2": "Potència P2", "energyPrice.P1": "Preu energia P1", "energyPrice.P2": "Preu energia P2", "energyPrice.P3": "Preu energia P3", energyDiscountPct: "Descompte sobre l'energia (si n'hi ha)", "powerPrice.P1": "Preu potència P1", "powerPrice.P2": "Preu potència P2" },
+      units: { days: "dies", kwh: "kWh", kw: "kW", energyPrice: "€/kWh", powerPrice: "€/kW·dia", promoKwh: "kWh", restKwh: "kWh", promoPrice: "€/kWh", restPrice: "€/kWh", serviceFeeEur: "€" },
+      kind: { particular: "Particular", empresa: "Empresa", hint: "No hem pogut identificar el titular amb seguretat. Confirma-ho, si us plau." },
+      notice: {
+        periode_curt: "Hem llegit que aquesta factura cobreix molt pocs dies. Comprova les dates i els dies facturats: si són correctes, no et podrem calcular un estalvi anual fiable i un assessor ho revisarà amb tu.",
+        factura_antiga: "Hem llegit que aquesta factura és antiga. Comprova les dates del període: si són correctes, et mostrarem només una estimació orientativa, perquè els teus preus actuals poden ser diferents.",
+      } as Record<string, string>,
+      stale: {
+        title: "Estimació orientativa amb una factura antiga",
+        warning: "Aquesta factura és antiga i els preus que pagues ara poden ser diferents. No és un estalvi actual fiable: puja la teva última factura o demana que un assessor ho revisi.",
+        saving: "de diferència estimada a l'any, amb els preus d'aquella factura",
+        tag: "Factura antiga",
+      },
+      variable: { tag: "Tarifa indexada", note: "El teu cost actual és variable: l'hem estimat amb els preus d'aquesta factura, que canvien cada mes amb el mercat. Les ofertes de preu fix no varien." },
       mode: {
         label: "Com et facturen l'energia",
         hint: "L'hem detectat a la teva factura. Canvia-ho només si no és correcte.",
