@@ -2,6 +2,10 @@
 
 Estat: **desenvolupat, apagat**. El comparador real només funciona quan es compleixen **totes** aquestes condicions:
 1. Migració `067_savenergy_web.sql` aplicada (primer en una base de dades de proves aïllada).
+   Després, `068_savenergy_fiabilitat.sql`: només afegeix tres paràmetres a `sev_settings` (no activa res):
+   - `min_invoice_days` (20) i `max_invoice_age_months` (12): una factura massa curta o massa antiga no mostra cap estalvi anual i es deriva a un assessor;
+   - `ai_fallback` (`essencials`): quan es recorre a la IA després de l'extracció directa del PDF i la validació de coherència — `mai`, `essencials` (falten dades imprescindibles) o `contradiccions` (també si la lectura és completa però incoherent). Sempre amb `ai_enabled` actiu i dins dels límits de `sev_reserve_ai`; amb la IA desactivada no es fa mai cap crida.
+   Si la base de dades de proves ja es va inicialitzar amb la 067, n'hi ha prou d'executar-hi el fitxer `068_savenergy_fiabilitat.sql`.
 2. Variables configurades a la web i al CRM.
 3. `enabled = true` al panell «SavEnergy IA (web)» del CRM.
 4. `NEXT_PUBLIC_SAVENERGY_ENABLED=true` a la web.

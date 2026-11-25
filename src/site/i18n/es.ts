@@ -160,6 +160,8 @@ const es: Dictionary = {
       advisorTitle: "Lo revisamos contigo",
       advisor: {
         empresa: "Hemos detectado que el titular de esta factura es una empresa. De momento el comparador en línea solo cubre viviendas: un asesor revisará tu factura y te preparará una propuesta para empresas.",
+        periode_curt: "Esta factura cubre muy pocos días y no es representativa de tu consumo: no podemos calcularte un ahorro anual fiable. Sube una factura de un mes completo o déjanos tus datos y un asesor lo revisará contigo.",
+        factura_antiga: "Esta factura es antigua y sus precios ya no son los vigentes: no podemos calcularte un ahorro fiable. Sube tu última factura o déjanos tus datos y un asesor lo revisará contigo.",
         fora_abast: "Esta factura no es de una vivienda con tarifa 2.0TD o tiene valores fuera de lo que comparamos en línea. Un asesor la revisará personalmente.",
         dades_insuficients: "No hemos podido leer suficientes datos para calcularlo con rigor. Un asesor lo revisará contigo.",
         dades_dubtoses: "Hay datos que deben confirmarse. Un asesor lo revisará contigo.",

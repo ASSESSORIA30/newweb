@@ -157,7 +157,7 @@ export function LiveUpload({ t, locale }: { t: Dictionary; locale: Locale }) {
           <>
             <div className="s-live__advisor">
               <h3 ref={headRef} tabIndex={-1}>{L.advisorTitle}</h3>
-              <p>{(o.reason === "fora_abast" && o.detail === "empresa" ? L.advisor.empresa : L.advisor[o.reason]) ?? L.advisor.dades_insuficients}</p>
+              <p>{(o.reason === "fora_abast" && o.detail === "empresa" ? L.advisor.empresa : o.reason === "factura_no_representativa" ? (o.detail === "factura_antiga" ? L.advisor.factura_antiga : L.advisor.periode_curt) : L.advisor[o.reason]) ?? L.advisor.dades_insuficients}</p>
             </div>
             <div className="s-row">
               {sess ? <button type="button" className="s-btn s-btn--primary" onClick={() => setPhase({ k: "contact", st: phase.st })}>{L.talk}</button> : <a href="#contacte" className="s-btn s-btn--primary">{L.talk}</a>}

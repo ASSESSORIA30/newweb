@@ -159,6 +159,8 @@ const ca = {
       advisorTitle: "Ho revisem amb tu",
       advisor: {
         empresa: "Hem detectat que el titular d'aquesta factura és una empresa. De moment el comparador en línia només cobreix habitatges: un assessor revisarà la teva factura i et prepararà una proposta per a empreses.",
+        periode_curt: "Aquesta factura cobreix molt pocs dies i no és representativa del teu consum: no et podem calcular un estalvi anual fiable. Puja una factura d'un mes complet o deixa'ns les dades i un assessor ho revisarà amb tu.",
+        factura_antiga: "Aquesta factura és antiga i els seus preus ja no són els vigents: no et podem calcular un estalvi fiable. Puja la teva última factura o deixa'ns les dades i un assessor ho revisarà amb tu.",
         fora_abast: "Aquesta factura no és d'un habitatge amb tarifa 2.0TD o té valors fora del que comparem en línia. Un assessor la revisarà personalment.",
         dades_insuficients: "No hem pogut llegir prou dades per calcular-ho amb rigor. Un assessor ho revisarà amb tu.",
         dades_dubtoses: "Hi ha dades que cal confirmar. Un assessor ho revisarà amb tu.",
