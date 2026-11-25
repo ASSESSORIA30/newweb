@@ -5,7 +5,11 @@ import type { Dictionary } from "../i18n/ca";
 import { homePath, type Locale } from "../i18n/config";
 import { captureAttribution } from "../lead/tracking";
 
-export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
+/**
+ * `base` prefixes the in-page anchors when the header is used outside the home (legal pages);
+ * `alt` gives the other-language URL of the current page.
+ */
+export function Header({ t, locale, base = "", alt }: { t: Dictionary; locale: Locale; base?: string; alt?: Record<Locale, string> }) {
   const [solid, setSolid] = useState(false);
   const [navy, setNavy] = useState(false);
   const [open, setOpen] = useState(false);
@@ -36,7 +40,7 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
   // Remember the language choice and keep the visitor's place on the page.
   const switchTo = (l: Locale) => (e: React.MouseEvent<HTMLAnchorElement>) => {
     document.cookie = `a30_lang=${l}; path=/; max-age=31536000; samesite=lax`;
-    e.currentTarget.href = homePath(l) + window.location.hash;
+    e.currentTarget.href = alt ? alt[l] : homePath(l) + window.location.hash;
   };
 
   return (
@@ -48,7 +52,7 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
         </a>
         <nav aria-label="Principal" className="s-nav">
           {t.nav.items.map((i) => (
-            <a key={i.href} href={i.href}>
+            <a key={i.href} href={base + i.href}>
               {i.label}
             </a>
           ))}
@@ -58,7 +62,7 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
             {(["ca", "es"] as const).map((l) => (
               <a
                 key={l}
-                href={homePath(l)}
+                href={alt ? alt[l] : homePath(l)}
                 hrefLang={l}
                 lang={l}
                 aria-current={l === locale ? "true" : undefined}
@@ -68,10 +72,10 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
               </a>
             ))}
           </div>
-          <a href="#contacte" className="s-header__contact">
+          <a href={`${base}#contacte`} className="s-header__contact">
             {t.nav.contact}
           </a>
-          <a href="#savenergy" className="s-btn s-btn--primary s-btn--sm">
+          <a href={`${base}#savenergy`} className="s-btn s-btn--primary s-btn--sm">
             {t.nav.cta}
           </a>
           <button
@@ -89,11 +93,11 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
       </div>
       <div id="s-sheet" className="s-sheet" hidden={!open}>
         {t.nav.items.map((i) => (
-          <a key={i.href} href={i.href} onClick={() => setOpen(false)}>
+          <a key={i.href} href={base + i.href} onClick={() => setOpen(false)}>
             {i.label}
           </a>
         ))}
-        <a href="#contacte" onClick={() => setOpen(false)}>
+        <a href={`${base}#contacte`} onClick={() => setOpen(false)}>
           {t.nav.contact}
         </a>
       </div>

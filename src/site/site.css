@@ -338,6 +338,7 @@
 }
 .s-nav a,
 .s-header__contact {
+  white-space: nowrap;
   color: var(--ink-2);
   text-decoration: none;
   font-size: 0.93rem;
@@ -426,7 +427,7 @@
   text-decoration: none;
   font-size: 1.2rem;
 }
-@media (max-width: 1180px) {
+@media (max-width: 1340px) {
   .s-nav {
     display: none;
   }
@@ -2235,7 +2236,9 @@ select.s-input {
   margin-top: 2.25rem;
 }
 .s-close__panel {
-  background: rgb(255 255 255 / 0.03);
+  /* Opaque: the decorative ring behind must never cross the fields. */
+  position: relative;
+  background: color-mix(in srgb, var(--surface-deeper) 92%, var(--green-800));
 }
 @media (max-width: 960px) {
   .s-close__grid {

@@ -3,16 +3,31 @@
 import { useState } from "react";
 import type { Dictionary } from "../i18n/ca";
 import type { Locale } from "../i18n/config";
-import { Consent, Field, FormDone, useLeadForm } from "../ui/forms";
+import { Consent, Field, FormDone, Honeypot, SubmitRow, useLeadForm } from "../ui/forms";
 
 export function Collaborators({ t, locale }: { t: Dictionary; locale: Locale }) {
   const c = t.collaborators;
   const [profile, setProfile] = useState<string>(c.profiles[0]);
-  const { onSubmit, errors, status, refId, reset } = useLeadForm({
+  const { onSubmit, errors, status, sendError, reset } = useLeadForm({
     kind: "collaborator",
     locale,
     t,
     rules: { name: "required", phone: "phone", email: "email" },
+    map: (d) => {
+      const g = (k: string) => String(d.get(k) ?? "").trim();
+      return {
+        contact: {
+          name: g("name"),
+          phone: g("phone").replace(/[\s.-]/g, ""),
+          email: g("email").toLowerCase(),
+          company: g("company") || undefined,
+          city: g("town") || undefined,
+          service: locale === "es" ? "Colaboración" : "Col·laboració",
+          message: g("message") || undefined,
+        },
+        details: [[c.profilesLabel, profile]],
+      };
+    },
   });
 
   return (
@@ -43,11 +58,11 @@ export function Collaborators({ t, locale }: { t: Dictionary; locale: Locale }) 
         </div>
         <div className="s-collab__panel">
           {status === "done" ? (
-            <FormDone text={c.form.done} refId={refId} t={t} onAgain={reset} againLabel={t.common.close} />
+            <FormDone text={c.form.done} t={t} onAgain={reset} />
           ) : (
             <form onSubmit={onSubmit} noValidate className="s-form">
               <h3>{c.form.title}</h3>
-              <input type="hidden" name="profile" value={profile} />
+              <Honeypot />
               <Field t={t} label={c.form.name} name="name" autoComplete="name" error={errors.name} />
               <Field t={t} label={c.form.company} name="company" autoComplete="organization" optional />
               <div className="s-form__row">
@@ -56,11 +71,8 @@ export function Collaborators({ t, locale }: { t: Dictionary; locale: Locale }) 
               </div>
               <Field t={t} label={c.form.town} name="town" autoComplete="address-level2" optional />
               <Field t={t} label={c.form.message} name="message" as="textarea" optional />
-              <Consent t={t} error={errors.privacy} privacyHref={t.footer.legalLinks[1].href} />
-              <button type="submit" className="s-btn s-btn--on-navy" disabled={status === "sending"}>
-                {status === "sending" ? t.common.sending : c.form.submit}
-              </button>
-              <p className="s-form__sim">{t.common.simulationNote}</p>
+              <Consent t={t} error={errors.privacy} privacyHref={t.footer.legalLinks[1].href} legalHref={t.footer.legalLinks[0].href} />
+              <SubmitRow t={t} label={c.form.submit} status={status} sendError={sendError} className="s-btn s-btn--on-navy" />
             </form>
           )}
         </div>

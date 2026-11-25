@@ -1,9 +1,12 @@
 "use client";
 
+import { CONSENT_EVENT, hasAnalyticsConsent, type ConsentState } from "../consent/consent";
+
 /**
  * Lead attribution, captured in the browser only (no server cost):
- * - first touch (kept for 90 days in localStorage) and last touch (sessionStorage)
- * - utm_*, gclid/fbclid, collaborator referral code (?ref= or ?col=), landing page, referrer
+ * - utm_*, gclid/fbclid, collaborator referral code (?ref= or ?col=), landing page, referrer.
+ * - Without consent it lives in memory for this page view only (attached to a form sent now).
+ * - With "analytics" consent: first touch kept 90 days (localStorage), last touch per session (sessionStorage).
  */
 export type Attribution = {
   utm_source?: string;
@@ -24,6 +27,8 @@ const FIRST = "a30.attribution.first.v1";
 const LAST = "a30.attribution.last.v1";
 const TTL = 90 * 24 * 3600 * 1000;
 
+let memory: Attribution | null = null;
+
 function read(): Attribution {
   const q = new URLSearchParams(window.location.search);
   const a: Attribution = { landing: window.location.pathname, referrer: document.referrer || "", at: new Date().toISOString() };
@@ -36,9 +41,8 @@ function read(): Attribution {
   return a;
 }
 
-export function captureAttribution() {
+function persist(now: Attribution) {
   try {
-    const now = read();
     const hasSignal = KEYS.some((k) => now[k]) || now.ref || (now.referrer && !now.referrer.includes(window.location.host));
     const first = localStorage.getItem(FIRST);
     const firstOk = first && Date.now() - Date.parse(JSON.parse(first).at) < TTL;
@@ -49,17 +53,41 @@ export function captureAttribution() {
   }
 }
 
-export function getAttribution(): { first?: Attribution; last?: Attribution } {
+function forget() {
   try {
-    const first = localStorage.getItem(FIRST);
-    const last = sessionStorage.getItem(LAST);
-    return { first: first ? JSON.parse(first) : undefined, last: last ? JSON.parse(last) : undefined };
+    localStorage.removeItem(FIRST);
+    sessionStorage.removeItem(LAST);
   } catch {
-    return {};
+    /* nothing stored */
   }
 }
 
-/** Conversion events go to window.dataLayer; no third-party script is loaded until analytics is approved. */
+let listening = false;
+export function captureAttribution() {
+  memory = read();
+  if (hasAnalyticsConsent()) persist(memory);
+  if (!listening) {
+    listening = true;
+    window.addEventListener(CONSENT_EVENT, (e) => {
+      if ((e as CustomEvent<ConsentState>).detail.analytics) persist(memory ?? read());
+      else forget();
+    });
+  }
+}
+
+export function getAttribution(): { first?: Attribution; last?: Attribution } {
+  const now = memory ?? read();
+  if (!hasAnalyticsConsent()) return { last: now };
+  try {
+    const first = localStorage.getItem(FIRST);
+    const last = sessionStorage.getItem(LAST);
+    return { first: first ? JSON.parse(first) : undefined, last: last ? JSON.parse(last) : now };
+  } catch {
+    return { last: now };
+  }
+}
+
+/** Conversion events go to window.dataLayer (in-page only); no third-party script is loaded. */
 export function track(event: string, props: Record<string, unknown> = {}) {
   const w = window as unknown as { dataLayer?: unknown[] };
   w.dataLayer = w.dataLayer || [];

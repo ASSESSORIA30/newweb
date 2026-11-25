@@ -8,7 +8,8 @@ import type { Dictionary } from "../i18n/ca";
 import type { Locale } from "../i18n/config";
 import { company } from "../data/company";
 import { track } from "../lead/tracking";
-import { Consent, Field, FormDone, useLeadForm } from "../ui/forms";
+import { Consent, Field, FormDone, Honeypot, SubmitRow, useLeadForm } from "../ui/forms";
+import { requestStudy } from "../lead/intent";
 
 type Mode = "upload" | "estimate" | "advisor";
 
@@ -267,7 +268,10 @@ function UploadPanel({ t }: { t: Dictionary }) {
             ))}
           </ul>
           <div className="s-row">
-            <a href="#contacte" className="s-btn s-btn--primary" onClick={() => track("savenergy_request_study")}>
+            <a href="#contacte" className="s-btn s-btn--primary" onClick={() => {
+                track("savenergy_request_study");
+                requestStudy();
+              }}>
               {u.request}
             </a>
             <button
@@ -287,7 +291,7 @@ function UploadPanel({ t }: { t: Dictionary }) {
   );
 }
 
-function EstimatePanel({ t }: { t: Dictionary }) {
+function EstimatePanel({ t, locale }: { t: Dictionary; locale: Locale }) {
   const e = t.savenergy.estimate;
   const [who, setWho] = useState<"home" | "business">("home");
   const [supply, setSupply] = useState<"light" | "gas" | "both">("light");
@@ -375,7 +379,10 @@ function EstimatePanel({ t }: { t: Dictionary }) {
         </p>
         <p className="s-estimate__text">{e.resultText}</p>
         {result ? (
-          <a href="#contacte" className="s-btn s-btn--secondary" onClick={() => track("savenergy_estimate_to_advisor")}>
+          <a href="#contacte" className="s-btn s-btn--secondary" onClick={() => {
+            track("savenergy_estimate_to_advisor");
+            requestStudy(supply === "gas" ? "Gas" : supply === "both" ? (locale === "es" ? "Varios servicios" : "Diversos serveis") : locale === "es" ? "Electricidad" : "Electricitat");
+          }}>
             {e.resultCta}
           </a>
         ) : null}
@@ -386,11 +393,18 @@ function EstimatePanel({ t }: { t: Dictionary }) {
 
 function AdvisorPanel({ t, locale }: { t: Dictionary; locale: Locale }) {
   const a = t.savenergy.advisor;
-  const { onSubmit, errors, status, refId, reset } = useLeadForm({
+  const { onSubmit, errors, status, sendError, reset } = useLeadForm({
     kind: "callback",
     locale,
     t,
     rules: { name: "required", phone: "phone" },
+    map: (d) => {
+      const g = (k: string) => String(d.get(k) ?? "").trim();
+      return {
+        contact: { name: g("name"), phone: g("phone").replace(/[\s.-]/g, ""), service: locale === "es" ? "Asesoramiento" : "Assessorament" },
+        details: [[a.when, g("when")]],
+      };
+    },
   });
   return (
     <div className="s-advisor">
@@ -411,17 +425,16 @@ function AdvisorPanel({ t, locale }: { t: Dictionary; locale: Locale }) {
         </ul>
       </div>
       {status === "done" ? (
-        <FormDone text={a.done} refId={refId} t={t} onAgain={reset} againLabel={t.common.close} />
+        <FormDone text={a.done} t={t} onAgain={reset} />
       ) : (
         <form className="s-advisor__form" onSubmit={onSubmit} noValidate>
           <p className="s-advisor__q">{a.callback}</p>
+          <Honeypot />
           <Field t={t} label={a.name} name="name" autoComplete="name" error={errors.name} />
           <Field t={t} label={a.phone} name="phone" type="tel" autoComplete="tel" inputMode="tel" placeholder="600 000 000…" error={errors.phone} />
           <Field t={t} label={a.when} name="when" as="select" options={a.whenOptions} optional />
-          <Consent t={t} error={errors.privacy} privacyHref={t.footer.legalLinks[1].href} />
-          <button type="submit" className="s-btn s-btn--primary" disabled={status === "sending"}>
-            {status === "sending" ? t.common.sending : a.submit}
-          </button>
+          <Consent t={t} error={errors.privacy} privacyHref={t.footer.legalLinks[1].href} legalHref={t.footer.legalLinks[0].href} />
+          <SubmitRow t={t} label={a.submit} status={status} sendError={sendError} className="s-btn s-btn--primary" />
         </form>
       )}
     </div>
@@ -493,7 +506,7 @@ export function SavConsole({ t, locale, className = "s-console" }: { t: Dictiona
       </div>
       <div id={`${base}-p`} role="tabpanel" aria-labelledby={`${base}-t-${mode}`} className="s-console__panel" data-instant={instant || undefined} key={mode}>
         {mode === "upload" ? <UploadPanel t={t} /> : null}
-        {mode === "estimate" ? <EstimatePanel t={t} /> : null}
+        {mode === "estimate" ? <EstimatePanel t={t} locale={locale} /> : null}
         {mode === "advisor" ? <AdvisorPanel t={t} locale={locale} /> : null}
       </div>
       <p className="s-console__foot">{t.common.simulationNote}</p>

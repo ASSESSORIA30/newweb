@@ -1,0 +1,42 @@
+# Textos legals · canvis proposats (pendents de validació)
+
+Les pàgines `/privacitat`, `/cookies`, `/avis-legal` (i `/es/privacidad`, `/es/cookies`, `/es/aviso-legal`) publiquen **literalment** els textos de www.assessoria30.com (copiats el 25/11/2026, en català i castellà). Font: `src/site/legal/content.ts`.
+
+Aquesta llista recull el que caldria **actualitzar** per les tecnologies i funcionalitats de la nova web. No s'ha aplicat res: cal validar-ho (idealment amb l'assessor legal) abans de publicar-ho.
+
+## Política de privacitat
+
+1. **Responsable**: afegir el domicili social (p. ex. Av. Garrigues, 21, 25001 Lleida, si és el social) i, si n'hi ha, el contacte del delegat de protecció de dades.
+2. **Encarregats del tractament / proveïdors** (no hi consten):
+   - **Formspree** (Formspree, Inc., EUA): rep els formularis i els envia a info@assessoria30.com. Implica **transferència internacional** (indicar la garantia: EU‑US Data Privacy Framework o clàusules contractuals tipus).
+   - **Vercel** (allotjament web, EUA): mateixa observació sobre transferències.
+   - Proveïdor del correu (info@assessoria30.com) i proveïdor on s'allotja el **CRM** (que llegeix automàticament els correus de Formspree).
+3. **Finalitats noves**: captació de col·laboradors; sol·licitud de trucada; registre de l'origen de la consulta (pàgina, paràmetres UTM, codi de col·laborador), aquest darrer **només amb consentiment** d'atribució.
+4. **Legitimació**: les comunicacions comercials només amb el **consentiment separat** (casella opcional ja implementada als formularis). Eliminar l'apartat **10. Acceptació** («L'ús d'aquesta web implica l'acceptació…»): l'ús de la web no és una base legal vàlida segons el RGPD.
+5. **Conservació**: concretar terminis (p. ex. consultes que no acaben en contractació: 12 mesos; comunicacions comercials: fins que es retiri el consentiment).
+6. **Comunicació a tercers**: aclarir que les dades només es comuniquen a comercialitzadores/asseguradores quan el client sol·licita el servei; i, si una consulta arriba amb codi de col·laborador, si aquest rep informació de l'estat de la seva recomanació.
+7. **Drets**: afegir el dret a **retirar el consentiment** en qualsevol moment i una adreça postal alternativa.
+8. **SavEnergy IA (fase següent)**: quan s'activi la pujada de factures, informar del proveïdor d'IA, de la conservació de les factures i que no es prenen decisions automatitzades amb efectes jurídics.
+9. **Coherència**: la versió castellana diu «Asesoría 3.0 AE, SL» en alguns apartats i «Assessoria 3.0 AE, SL» en d'altres; unificar amb la denominació social. Unificar també el format del telèfon (973982852 / 973 982 852).
+
+## Política de cookies
+
+1. Substituir la llista genèrica per la **llista real** de la nova web:
+
+   | Nom | Tipus | Finalitat | Durada | Consentiment |
+   |---|---|---|---|---|
+   | `a30.consent.v1` | localStorage | Recordar l'elecció de cookies | Fins que es canviï | Necessària |
+   | `a30_lang` | Cookie pròpia | Recordar l'idioma triat (només si l'usuari canvia d'idioma) | 1 any | Necessària |
+   | `a30.attribution.first.v1` | localStorage | Origen de la primera visita (UTM, codi de col·laborador) | 90 dies | Atribució i anàlisi |
+   | `a30.attribution.last.v1` | sessionStorage | Origen de la visita actual | Sessió | Atribució i anàlisi |
+
+2. **No** s'utilitza Google Analytics ni cookies publicitàries: treure'n la menció o indicar «no s'utilitzen actualment».
+3. Substituir l'apartat **4. Consentiment** («En accedir a aquesta web, l'usuari accepta…») per: el consentiment es demana amb el bàner; es pot acceptar, rebutjar o configurar, i modificar en qualsevol moment des de «Configura les cookies» al peu de pàgina.
+4. Indicar que Formspree només rep dades quan s'envia un formulari i no instal·la cookies a la web.
+5. Afegir la data d'última actualització.
+
+## Avís legal
+
+1. **LSSI art. 10**: falten el **domicili social** i les **dades d'inscripció al Registre Mercantil** (tom, foli, full).
+2. Afegir que les simulacions de SavEnergy IA i de la web són **orientatives** i no constitueixen oferta contractual.
+3. Opcional: jurisdicció (jutjats de Lleida) i data d'actualització.

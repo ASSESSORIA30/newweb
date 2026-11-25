@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import type { Dictionary } from "@/site/i18n/ca";
 import { serviceCatalog, type ServiceKey } from "@/site/data/company";
+import { requestStudy } from "@/site/lead/intent";
 import { track } from "@/site/lead/tracking";
 import { ParticleMorph } from "../visuals/ParticleMorph";
 
@@ -75,7 +76,10 @@ export function SigServices({ t }: { t: Dictionary }) {
                   <li key={p}>{p}</li>
                 ))}
               </ul>
-              <a href="#contacte" className="g-btn g-btn--brand" onClick={() => track("service_cta", { service: k })}>
+              <a href="#contacte" className="g-btn g-btn--brand" onClick={() => {
+                  track("service_cta", { service: k });
+                  requestStudy(t.services.items[k].name.replace(/\u2060\u200A\u2060/g, ""));
+                }}>
                 {t.services.cta}
               </a>
             </div>

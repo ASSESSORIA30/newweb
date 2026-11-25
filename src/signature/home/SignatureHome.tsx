@@ -1,4 +1,5 @@
 import { SmoothScroll } from "@/components/SmoothScroll";
+import { CookieBanner } from "@/site/consent/CookieBanner";
 import { getDictionary, type Locale } from "@/site/i18n/config";
 import { Header } from "@/site/home/Header";
 import { RefreshOnFonts } from "@/site/home/RefreshOnFonts";
@@ -74,6 +75,7 @@ export function SignatureHome({ locale }: { locale: Locale }) {
       </main>
       <Footer t={t} locale={locale} />
       <JsonLd locale={locale} />
+      <CookieBanner t={t} policyHref={t.footer.legalLinks[2].href} />
     </div>
   );
 }

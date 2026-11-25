@@ -1,6 +1,7 @@
 import type { Dictionary } from "../i18n/ca";
 import type { Locale } from "../i18n/config";
 import { company } from "../data/company";
+import { CookieSettingsButton } from "../consent/CookieBanner";
 
 export function Footer({ t, locale }: { t: Dictionary; locale: Locale }) {
   return (
@@ -42,6 +43,9 @@ export function Footer({ t, locale }: { t: Dictionary; locale: Locale }) {
                   <a href={l.href}>{l.label}</a>
                 </li>
               ))}
+              <li>
+                <CookieSettingsButton label={t.cookies.settings} className="s-footer__cookie" />
+              </li>
             </ul>
           </div>
         </div>
