@@ -6,6 +6,7 @@ import type { Dictionary } from "../i18n/ca";
 import type { Locale } from "../i18n/config";
 import { company } from "../data/company";
 import { track } from "../lead/tracking";
+import { goToComparator } from "@/signature/home/savenergyBus";
 import { INTENT_EVENT, type LeadIntent } from "../lead/intent";
 import { Consent, Field, FormDone, Honeypot, SubmitRow, splitContact, useLeadForm } from "../ui/forms";
 
@@ -75,7 +76,7 @@ export function Close({ t, locale }: { t: Dictionary; locale: Locale }) {
           </h2>
           <p className="s-lede">{t.close.lede}</p>
           <div className="s-close__actions">
-            <a href="#savenergy" className="s-btn s-btn--on-navy">
+            <a href="#savenergy-console" className="s-btn s-btn--on-navy" onClick={(e) => goToComparator("upload", e)}>
               {t.close.compare}
             </a>
             <a href={company.whatsapp.href} className="s-btn s-btn--ghost-navy" onClick={() => track("whatsapp_click", { from: "close" })}>

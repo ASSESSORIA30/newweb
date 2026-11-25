@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { Dictionary } from "../i18n/ca";
 import { homePath, type Locale } from "../i18n/config";
 import { captureAttribution } from "../lead/tracking";
+import { goToComparator } from "@/signature/home/savenergyBus";
 
 /**
  * `base` prefixes the in-page anchors when the header is used outside the home (legal pages);
@@ -75,7 +76,7 @@ export function Header({ t, locale, base = "", alt }: { t: Dictionary; locale: L
           <a href={`${base}#contacte`} className="s-header__contact">
             {t.nav.contact}
           </a>
-          <a href={`${base}#savenergy`} className="s-btn s-btn--primary s-btn--sm">
+          <a href={`${base}#savenergy-console`} className="s-btn s-btn--primary s-btn--sm" onClick={(e) => goToComparator("upload", e)}>
             {t.nav.cta}
           </a>
           <button

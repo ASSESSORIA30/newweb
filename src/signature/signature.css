@@ -2196,3 +2196,9 @@ label.s-cookie__cat {
   color: var(--ink-soft);
   max-width: 60ch;
 }
+
+/* Ancoratge del comparador: el salt directe des de «Analitza la factura» el deixa sota la capçalera fixa */
+#savenergy-console {
+  scroll-margin-top: 88px;
+  outline: none;
+}

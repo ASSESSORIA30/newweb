@@ -448,7 +448,7 @@ function AdvisorPanel({ t, locale }: { t: Dictionary; locale: Locale }) {
 /* ------------------------------------------------------------------ */
 
 /** The three entry modes. Listens to the SavEnergy bus so any CTA can open it in a given mode. */
-export function SavConsole({ t, locale, className = "s-console" }: { t: Dictionary; locale: Locale; className?: string }) {
+export function SavConsole({ t, locale, className = "s-console", anchorId = "savenergy-console" }: { t: Dictionary; locale: Locale; className?: string; /** null: l'ancoratge el posa el contenidor */ anchorId?: string | null }) {
   const [mode, setMode] = useState<Mode>("upload");
   const [instant, setInstant] = useState(false);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -478,7 +478,7 @@ export function SavConsole({ t, locale, className = "s-console" }: { t: Dictiona
   };
 
   return (
-    <div className={className} id="savenergy-console">
+    <div className={className} id={anchorId ?? undefined}>
       <div className="s-console__bar">
         <p className="s-console__label" id={`${base}-l`}>
           {t.savenergy.modesLabel}
@@ -513,7 +513,8 @@ export function SavConsole({ t, locale, className = "s-console" }: { t: Dictiona
         {mode === "estimate" ? <EstimatePanel t={t} locale={locale} /> : null}
         {mode === "advisor" ? <AdvisorPanel t={t} locale={locale} /> : null}
       </div>
-      <p className="s-console__foot">{t.common.simulationNote}</p>
+      {/* Amb el comparador real connectat al CRM, l'avís de «simulació sense connexió» ja no és cert: no es mostra. */}
+      {LIVE ? null : <p className="s-console__foot">{t.common.simulationNote}</p>}
     </div>
   );
 }

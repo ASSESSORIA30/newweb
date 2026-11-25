@@ -180,11 +180,11 @@ const advisorState = (reason: string): SessionState => ({ status: "assessor", re
 /* ------------------------------------------------------------------ confirmació de dades */
 function Confirm({ t, st, session, onDone, onError, headRef }: { t: Dictionary; st: SessionState; session: Session; onDone: (s: SessionState) => void; onError: (e: unknown) => void; headRef: React.RefObject<HTMLHeadingElement | null> }) {
   const L = t.savenergy.live;
-  const keys = ["days", "kwh.P1", "kwh.P2", "kwh.P3", "kw.P1", "kw.P2", "energyPrice.P1", "energyPrice.P2", "energyPrice.P3", "powerPrice.P1", "powerPrice.P2"] as const;
+  const keys = ["days", "annualKwh", "kwh.P1", "kwh.P2", "kwh.P3", "kw.P1", "kw.P2", "energyPrice.P1", "energyPrice.P2", "energyPrice.P3", "powerPrice.P1", "powerPrice.P2"] as const;
   const byKey = new Map(st.fields.map((f) => [f.key, f]));
   const [vals, setVals] = useState<Record<string, string>>(() => Object.fromEntries(keys.map((k) => [k, byKey.get(k)?.value == null ? "" : String(byKey.get(k)!.value).replace(".", ",")])));
   const [busy, setBusy] = useState(false);
-  const unit = (k: string) => L.units[k.split(".")[0] as keyof typeof L.units] ?? "";
+  const unit = (k: string) => (k === "annualKwh" ? L.units.kwh : L.units[k.split(".")[0] as keyof typeof L.units] ?? "");
   const tariff = byKey.get("accessTariff")?.value;
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

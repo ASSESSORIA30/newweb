@@ -5,7 +5,7 @@ import { gsap, useGSAP } from "@/lib/gsap";
 import { MotionToggle } from "@/components/MotionToggle";
 import type { Dictionary } from "@/site/i18n/ca";
 import { RingScene } from "../visuals/RingScene";
-import { openSavEnergy } from "./savenergyBus";
+import { goToComparator } from "./savenergyBus";
 
 export function SignatureHero({ t }: { t: Dictionary }) {
   const root = useRef<HTMLElement>(null);
@@ -55,7 +55,7 @@ export function SignatureHero({ t }: { t: Dictionary }) {
           <div className="g-hero__aside">
             <p className="g-hero__sub">{t.hero.subtitle}</p>
             <div className="g-hero__actions">
-              <a href="#savenergy" className="g-btn g-btn--brand" onClick={() => openSavEnergy("upload")}>
+              <a href="#savenergy-console" className="g-btn g-btn--brand" onClick={(e) => goToComparator("upload", e)}>
                 {t.hero.primary}
               </a>
               <a href="#serveis" className="g-btn g-btn--glass">
@@ -69,7 +69,7 @@ export function SignatureHero({ t }: { t: Dictionary }) {
             SavEnergy IA
           </span>
           {(["upload", "estimate", "advisor"] as const).map((m) => (
-            <a key={m} href="#savenergy-console" onClick={() => openSavEnergy(m)}>
+            <a key={m} href="#savenergy-console" onClick={(e) => goToComparator(m, e)}>
               {t.savenergy.modes[m]}
             </a>
           ))}

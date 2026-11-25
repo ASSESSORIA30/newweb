@@ -269,9 +269,9 @@ export function SigSavEnergy({ t, locale }: { t: Dictionary; locale: Locale }) {
         </div>
       </div>
 
-      <div className="s-wrap g-sav__console">
+      <div className="s-wrap g-sav__console" id="savenergy-console" tabIndex={-1}>
         <h3 className="g-sav__console-title">{g.consoleTitle}</h3>
-        <SavConsole t={t} locale={locale} className="s-console g-console" />
+        <SavConsole t={t} locale={locale} className="s-console g-console" anchorId={null} />
       </div>
     </section>
   );
