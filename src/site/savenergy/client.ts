@@ -4,7 +4,7 @@
  * l'URL signada d'un sol fitxer que retorna el CRM. Res no es desa al navegador: la sessió viu en memòria.
  */
 export const CONSENT_VERSION = "2026-11-sev1";
-export type PublicFieldKey = "accessTariff" | "days" | "annualKwh" | "kwh.P1" | "kwh.P2" | "kwh.P3" | "kw.P1" | "kw.P2" | "energyPrice.P1" | "energyPrice.P2" | "energyPrice.P3" | "powerPrice.P1" | "powerPrice.P2";
+export type PublicFieldKey = "accessTariff" | "customerKind" | "days" | "annualKwh" | "energyDiscountPct" | "kwh.P1" | "kwh.P2" | "kwh.P3" | "kw.P1" | "kw.P2" | "energyPrice.P1" | "energyPrice.P2" | "energyPrice.P3" | "powerPrice.P1" | "powerPrice.P2";
 export interface PublicField { key: PublicFieldKey; value: string | number | null; unit: string | null; status: "llegit" | "per_revisar" | "pendent" | "revisat" }
 export interface Alternative { rank: number; label: string; product: string | null; contractType: string; permanence: string; priceGuaranteeMonths: number | null; conditions: string[]; annualCost: number; monthlyCost: number; saving: number; savingMonthly: number; savingPct: number; validTo: string | null }
 export type Outcome =

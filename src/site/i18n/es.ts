@@ -123,7 +123,7 @@ const es: Dictionary = {
       missingPrices: "No hemos podido leer tus precios actuales. Si los añades, podremos calcular el ahorro; si no, un asesor lo revisará contigo.",
       cups: "CUPS",
       confirm: "Confirma y compara",
-      fields: { accessTariff: "Tarifa de acceso", days: "Días facturados", annualKwh: "Consumo del último año (si aparece en la factura)", "kwh.P1": "Consumo P1 (punta)", "kwh.P2": "Consumo P2 (llano)", "kwh.P3": "Consumo P3 (valle)", "kw.P1": "Potencia P1", "kw.P2": "Potencia P2", "energyPrice.P1": "Precio energía P1", "energyPrice.P2": "Precio energía P2", "energyPrice.P3": "Precio energía P3", "powerPrice.P1": "Precio potencia P1", "powerPrice.P2": "Precio potencia P2" },
+      fields: { accessTariff: "Tarifa de acceso", days: "Días facturados", annualKwh: "Consumo del último año (si aparece en la factura)", "kwh.P1": "Consumo P1 (punta)", "kwh.P2": "Consumo P2 (llano)", "kwh.P3": "Consumo P3 (valle)", "kw.P1": "Potencia P1", "kw.P2": "Potencia P2", "energyPrice.P1": "Precio energía P1", "energyPrice.P2": "Precio energía P2", "energyPrice.P3": "Precio energía P3", energyDiscountPct: "Descuento sobre la energía (si lo hay)", "powerPrice.P1": "Precio potencia P1", "powerPrice.P2": "Precio potencia P2" },
       units: { days: "días", kwh: "kWh", kw: "kW", energyPrice: "€/kWh", powerPrice: "€/kW·día" },
       resultTitle: "Tu comparativa",
       orientative: "Estimación orientativa",
@@ -159,6 +159,7 @@ const es: Dictionary = {
       seeConditions: "Ver condiciones de la oferta",
       advisorTitle: "Lo revisamos contigo",
       advisor: {
+        empresa: "Hemos detectado que el titular de esta factura es una empresa. De momento el comparador en línea solo cubre viviendas: un asesor revisará tu factura y te preparará una propuesta para empresas.",
         fora_abast: "Esta factura no es de una vivienda con tarifa 2.0TD o tiene valores fuera de lo que comparamos en línea. Un asesor la revisará personalmente.",
         dades_insuficients: "No hemos podido leer suficientes datos para calcularlo con rigor. Un asesor lo revisará contigo.",
         dades_dubtoses: "Hay datos que deben confirmarse. Un asesor lo revisará contigo.",

@@ -122,7 +122,7 @@ const ca = {
       missingPrices: "No hem pogut llegir els teus preus actuals. Si els afegeixes, podrem calcular l'estalvi; si no, un assessor ho revisarà amb tu.",
       cups: "CUPS",
       confirm: "Confirma i compara",
-      fields: { accessTariff: "Tarifa d'accés", days: "Dies facturats", annualKwh: "Consum de l'últim any (si surt a la factura)", "kwh.P1": "Consum P1 (punta)", "kwh.P2": "Consum P2 (pla)", "kwh.P3": "Consum P3 (vall)", "kw.P1": "Potència P1", "kw.P2": "Potència P2", "energyPrice.P1": "Preu energia P1", "energyPrice.P2": "Preu energia P2", "energyPrice.P3": "Preu energia P3", "powerPrice.P1": "Preu potència P1", "powerPrice.P2": "Preu potència P2" },
+      fields: { accessTariff: "Tarifa d'accés", days: "Dies facturats", annualKwh: "Consum de l'últim any (si surt a la factura)", "kwh.P1": "Consum P1 (punta)", "kwh.P2": "Consum P2 (pla)", "kwh.P3": "Consum P3 (vall)", "kw.P1": "Potència P1", "kw.P2": "Potència P2", "energyPrice.P1": "Preu energia P1", "energyPrice.P2": "Preu energia P2", "energyPrice.P3": "Preu energia P3", energyDiscountPct: "Descompte sobre l'energia (si n'hi ha)", "powerPrice.P1": "Preu potència P1", "powerPrice.P2": "Preu potència P2" },
       units: { days: "dies", kwh: "kWh", kw: "kW", energyPrice: "€/kWh", powerPrice: "€/kW·dia" },
       resultTitle: "La teva comparativa",
       orientative: "Estimació orientativa",
@@ -158,6 +158,7 @@ const ca = {
       seeConditions: "Veure condicions de l'oferta",
       advisorTitle: "Ho revisem amb tu",
       advisor: {
+        empresa: "Hem detectat que el titular d'aquesta factura és una empresa. De moment el comparador en línia només cobreix habitatges: un assessor revisarà la teva factura i et prepararà una proposta per a empreses.",
         fora_abast: "Aquesta factura no és d'un habitatge amb tarifa 2.0TD o té valors fora del que comparem en línia. Un assessor la revisarà personalment.",
         dades_insuficients: "No hem pogut llegir prou dades per calcular-ho amb rigor. Un assessor ho revisarà amb tu.",
         dades_dubtoses: "Hi ha dades que cal confirmar. Un assessor ho revisarà amb tu.",
