@@ -10,6 +10,10 @@ import { company } from "../data/company";
 import { track } from "../lead/tracking";
 import { Consent, Field, FormDone, Honeypot, SubmitRow, useLeadForm } from "../ui/forms";
 import { requestStudy } from "../lead/intent";
+import { LiveUpload } from "../savenergy/LiveUpload";
+
+/** El comparador real només s'activa quan la web i el CRM estan configurats i validats; fins aleshores, la demostració. */
+const LIVE = process.env.NEXT_PUBLIC_SAVENERGY_ENABLED === "true";
 
 type Mode = "upload" | "estimate" | "advisor";
 
@@ -505,7 +509,7 @@ export function SavConsole({ t, locale, className = "s-console" }: { t: Dictiona
         </div>
       </div>
       <div id={`${base}-p`} role="tabpanel" aria-labelledby={`${base}-t-${mode}`} className="s-console__panel" data-instant={instant || undefined} key={mode}>
-        {mode === "upload" ? <UploadPanel t={t} /> : null}
+        {mode === "upload" ? (LIVE ? <LiveUpload t={t} locale={locale} /> : <UploadPanel t={t} />) : null}
         {mode === "estimate" ? <EstimatePanel t={t} locale={locale} /> : null}
         {mode === "advisor" ? <AdvisorPanel t={t} locale={locale} /> : null}
       </div>

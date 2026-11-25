@@ -1,0 +1,86 @@
+# SavEnergy IA · activació i proves (2.0TD residencial)
+
+Estat: **desenvolupat, apagat**. El comparador real només funciona quan es compleixen **totes** aquestes condicions:
+1. Migració `067_savenergy_web.sql` aplicada (primer en una base de dades de proves aïllada).
+2. Variables configurades a la web i al CRM.
+3. `enabled = true` al panell «SavEnergy IA (web)» del CRM.
+4. `NEXT_PUBLIC_SAVENERGY_ENABLED=true` a la web.
+
+Mentre no es compleixin, la web continua mostrant la demostració actual i els formularis de contacte i de col·laboradors segueixen anant a Formspree.
+
+Branques: web `feature/savenergy-web` (ASSESSORIA30/newweb) · CRM `feature/savenergy-web` (ASSESSORIA30/renovaciosC). Cap de les dues és a `main`.
+
+## 1. Claus de Cloudflare Turnstile (gratuït, sense tocar DNS)
+
+1. Entra a https://dash.cloudflare.com (si no hi ha compte, crea'n un de gratuït). No cal moure cap domini a Cloudflare.
+2. Menú **Turnstile** → **Add widget**.
+3. Configura el widget:
+   - **Widget name:** «Assessoria 3.0 · SavEnergy».
+   - **Hostnames:** `www.assessoria30.com`, `assessoria30.com` i el domini de la Preview que vulguis provar, per exemple `newweb-git-feature-savenergy-web-assessoria30s-projects.vercel.app`. Es poden afegir i treure més endavant.
+   - **Widget mode:** *Managed* (invisible si no hi ha risc; només demana un clic quan Cloudflare ho considera necessari).
+   - **Pre-clearance:** No.
+4. Copia les dues claus:
+   - **Site key** → variable `NEXT_PUBLIC_TURNSTILE_SITE_KEY` de la web (és pública).
+   - **Secret key** → variable `TURNSTILE_SECRET_KEY` de la web (**només servidor**, mai amb `NEXT_PUBLIC_`).
+
+Turnstile no instal·la galetes publicitàries ni de seguiment. Només es carrega quan el visitant tria una factura.
+
+## 2. Variables
+
+**Web (Vercel · projecte newweb · Preview i, quan toqui, Production)**
+
+| Variable | Valor | Visible al navegador |
+|---|---|---|
+| `NEXT_PUBLIC_SAVENERGY_ENABLED` | `true` per activar el panell real | sí (només és un interruptor) |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Site key de Turnstile | sí |
+| `TURNSTILE_SECRET_KEY` | Secret key de Turnstile | **no** |
+| `SAVENERGY_CRM_URL` | URL del CRM de **proves** (https://…) | **no** |
+| `SAVENERGY_SHARED_SECRET` | 64 caràcters aleatoris (`openssl rand -hex 32`), el mateix que al CRM | **no** |
+
+**CRM (Vercel · projecte del CRM · l'entorn de proves aïllat)**
+
+| Variable | Valor |
+|---|---|
+| `SAVENERGY_SHARED_SECRET` | el mateix valor que a la web |
+| `ANTHROPIC_API_KEY` | la clau existent del CRM (no canvia) |
+| `SAVENERGY_UPLOAD_NEEDS_APIKEY` | `false`. Només `true` si la Preview mostra que Storage rebutja les pujades signades sense `apikey`. |
+
+El model intern del CRM (`ANTHROPIC_MODEL`) **no canvia**. El de la web es tria al panell (per defecte, `claude-haiku-5-5`).
+
+## 3. Abans d'activar la lectura amb IA
+
+```bash
+ANTHROPIC_API_KEY=… npx tsx scripts/savenergy-model-check.ts claude-haiku-5-5
+```
+Comprova que el model està disponible per a la clau del CRM. No envia cap factura.
+
+```bash
+ANTHROPIC_API_KEY=… npx tsx --conditions=react-server scripts/savenergy-compara-lectura.ts ./factures-anonimitzades claude-haiku-5-5
+```
+Compara, camp per camp, la lectura del model intern i la de Haiku 5.5 sobre factures **anonimitzades**, i en mostra el cost. Amb 20 factures, el cost total és inferior a 1 $.
+
+Activa `ai_enabled` al panell només si la coincidència és satisfactòria. Sense IA, el comparador continua funcionant amb l'extracció de text dels PDF. La IA només s'usa quan aquesta extracció no és suficient.
+
+## 4. Neteja dels documents temporals
+
+- **Vercel Cron:** un cop al dia, com a reserva (compatible amb el pla Hobby, la convenció del CRM).
+- **Supabase Cron:** cada hora, executant `supabase/optional/savenergy_neteja_cada_hora.sql` quan s'activi el comparador. Garanteix el termini de 24 h comunicat al visitant.
+- **Servidor:** rebutja qualsevol sessió caducada encara que la neteja no hagi passat.
+
+## 5. Proves fetes (sense dades reals ni enviaments reals)
+
+- **CRM:**
+  - PostgreSQL real (PGlite): migració, permisos (cap accés anònim ni d'usuaris del CRM), límits atòmics, pressupost d'IA, nonces i desfer.
+  - Servidor amb Supabase en memòria: signatura i reenviaments, testimoni de sessió, lectura amb text primer, IA només amb pressupost, lead amb atribució del codi «C34», neteja de temporals i orfes.
+  - Motor: catàleg públic, abast, dades personals, regla de no inventar estalvis, anonimització.
+- **Web:**
+  - Playwright contra un CRM simulat que valida cada signatura, a escriptori i mòbil, en català i castellà.
+  - Turnstile i les pujades són simulats; Formspree no rep res d'aquest flux.
+
+## 6. Pendent per a la validació en Preview
+
+1. Base de dades de proves aïllada (projecte Supabase separat o local) amb la migració 067 i una còpia **anonimitzada** del catàleg.
+2. Verificar la pujada signada real a Storage (CORS i `apikey`).
+3. Executar els dos scripts de la § 3 i decidir el model.
+4. Publicar al panell les tarifes 2.0TD validades.
+5. Revisar els textos legals (`docs/legal-canvis-proposats.md`).

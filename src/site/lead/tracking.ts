@@ -36,8 +36,10 @@ function read(): Attribution {
     const v = q.get(k);
     if (v) a[k] = v.slice(0, 120);
   }
-  const ref = q.get("ref") || q.get("col");
-  if (ref && /^[\w-]{2,40}$/.test(ref)) a.ref = ref;
+  // Codis de col·laborador: tant els d'enllaç (4–16) com els històrics curts (p. ex. «C34» o «col. C34»).
+  // Aquí només es comprova la forma; qui decideix l'atribució és el servidor del CRM.
+  const ref = (q.get("ref") || q.get("col") || "").normalize("NFKC").trim();
+  if (ref && /^[A-Za-z0-9][A-Za-z0-9 ._-]{0,23}$/.test(ref)) a.ref = ref;
   return a;
 }
 

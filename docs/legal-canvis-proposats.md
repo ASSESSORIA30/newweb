@@ -19,6 +19,15 @@ Aquesta llista recull el que caldria **actualitzar** per les tecnologies i funci
 8. **SavEnergy IA (fase següent)**: quan s'activi la pujada de factures, informar del proveïdor d'IA, de la conservació de les factures i que no es prenen decisions automatitzades amb efectes jurídics.
 9. **Coherència**: la versió castellana diu «Asesoría 3.0 AE, SL» en alguns apartats i «Assessoria 3.0 AE, SL» en d'altres; unificar amb la denominació social. Unificar també el format del telèfon (973982852 / 973 982 852).
 
+### Addicions per SavEnergy IA (comparador amb factura)
+
+10. **Finalitat**: calcular una comparativa orientativa a partir de la factura que aporta el visitant (lectura automàtica de text i, si cal, amb IA).
+11. **Encarregats nous**: Anthropic (lectura amb IA, model configurable; transferència internacional amb garanties) i Cloudflare (verificació antibot Turnstile).
+12. **Conservació**: la factura i la lectura s'eliminen en un màxim de 24 hores si no es demana contacte. Si es demana, passen a l'expedient del lead amb la conservació general.
+13. **Dades tractades**: només les necessàries per al càlcul (tarifa, dies, consums, potències i preus). El titular, l'adreça, el NIF i l'IBAN no es desen a la sessió del comparador.
+14. **Decisions automatitzades**: el resultat és orientatiu i no produeix efectes jurídics. L'oferta definitiva la prepara un assessor.
+15. **SIPS**: si s'activa, consulta només amb l'autorització expressa del titular i només per a la comparativa.
+
 ## Política de cookies
 
 1. Substituir la llista genèrica per la **llista real** de la nova web:
@@ -29,6 +38,7 @@ Aquesta llista recull el que caldria **actualitzar** per les tecnologies i funci
    | `a30_lang` | Cookie pròpia | Recordar l'idioma triat (només si l'usuari canvia d'idioma) | 1 any | Necessària |
    | `a30.attribution.first.v1` | localStorage | Origen de la primera visita (UTM, codi de col·laborador) | 90 dies | Atribució i anàlisi |
    | `a30.attribution.last.v1` | sessionStorage | Origen de la visita actual | Sessió | Atribució i anàlisi |
+   | Cloudflare Turnstile | Servei de tercers (només en pujar una factura) | Protecció contra bots del comparador | Segons Cloudflare | Necessària (seguretat del servei sol·licitat) |
 
 2. **No** s'utilitza Google Analytics ni cookies publicitàries: treure'n la menció o indicar «no s'utilitzen actualment».
 3. Substituir l'apartat **4. Consentiment** («En accedir a aquesta web, l'usuari accepta…») per: el consentiment es demana amb el bàner; es pot acceptar, rebutjar o configurar, i modificar en qualsevol moment des de «Configura les cookies» al peu de pàgina.
