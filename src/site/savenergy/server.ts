@@ -18,7 +18,9 @@ export function savenergyConfig() {
   const turnstile = process.env.TURNSTILE_SECRET_KEY ?? "";
   // HTTPS obligatori; http només per a un CRM local de proves (localhost), mai a Vercel.
   const okUrl = /^https:\/\//.test(crm) || (!process.env.VERCEL && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(crm));
-  return { crm, secret, turnstile, ready: okUrl && secret.length >= 32 && !!turnstile && process.env.NEXT_PUBLIC_SAVENERGY_ENABLED === "true" };
+  // Previews del CRM protegides amb Vercel Authentication: secret de «Protection Bypass for Automation» (només servidor).
+  const bypass = process.env.SAVENERGY_CRM_BYPASS ?? "";
+  return { crm, secret, turnstile, bypass, ready: okUrl && secret.length >= 32 && !!turnstile && process.env.NEXT_PUBLIC_SAVENERGY_ENABLED === "true" };
 }
 
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");

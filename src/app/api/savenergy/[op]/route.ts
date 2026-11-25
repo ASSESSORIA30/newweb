@@ -32,7 +32,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ op: string }> 
   try {
     const r = await fetch(`${cfg.crm}${path}`, {
       method: "POST", body, cache: "no-store", signal: AbortSignal.timeout(25_000),
-      headers: { "content-type": "application/json", "x-a30-client-ip": ip, ...sign(cfg.secret, "POST", path, body) },
+      headers: { "content-type": "application/json", "x-a30-client-ip": ip, ...(cfg.bypass ? { "x-vercel-protection-bypass": cfg.bypass } : {}), ...sign(cfg.secret, "POST", path, body) },
     });
     const out = await r.json().catch(() => ({ error: "error_intern" }));
     return json(out, r.status);

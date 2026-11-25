@@ -36,6 +36,7 @@ Turnstile no instal·la galetes publicitàries ni de seguiment. Només es carreg
 | `TURNSTILE_SECRET_KEY` | Secret key de Turnstile | **no** |
 | `SAVENERGY_CRM_URL` | URL del CRM de **proves** (https://…) | **no** |
 | `SAVENERGY_SHARED_SECRET` | 64 caràcters aleatoris (`openssl rand -hex 32`), el mateix que al CRM | **no** |
+| `SAVENERGY_CRM_BYPASS` | Secret de *Protection Bypass for Automation* del CRM (només si les Previews del CRM estan protegides) | **no** |
 
 **CRM (Vercel · projecte del CRM · l'entorn de proves aïllat)**
 
@@ -78,6 +79,9 @@ Activa `ai_enabled` al panell només si la coincidència és satisfactòria. Sen
   - Turnstile i les pujades són simulats; Formspree no rep res d'aquest flux.
 
 ## 6. Pendent per a la validació en Preview
+
+Entorn de proves preparat: vegeu `supabase/test-env/README.md` al repositori del CRM (branca `feature/savenergy-web`): script d'inicialització, catàleg fictici i variables per branca.
+
 
 1. Base de dades de proves aïllada (projecte Supabase separat o local) amb la migració 067 i una còpia **anonimitzada** del catàleg.
 2. Verificar la pujada signada real a Storage (CORS i `apikey`).
