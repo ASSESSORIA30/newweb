@@ -13,7 +13,7 @@ const HAIR = "\u200A";
 function openGeminada<T>(v: T): T {
   if (typeof v === "string") return v.replace(/l·l/g, `l${HAIR}·${HAIR}l`).replace(/L·L/g, `L${HAIR}·${HAIR}L`) as T;
   if (Array.isArray(v)) return v.map(openGeminada) as T;
-  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, k === "meta" || k === "title" || k === "titleB" ? x : openGeminada(x)])) as T;
+  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, k === "meta" ? x : openGeminada(x)])) as T;
   return v;
 }
 

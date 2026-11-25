@@ -2,12 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/geologica/full.css";
 import "@fontsource/martian-mono/400.css";
 import "@/site/site.css";
-import { Home } from "@/site/home/Home";
+import "@/signature/signature.css";
+import { SignatureHome } from "@/signature/home/SignatureHome";
 import { homeMetadata } from "@/site/seo/metadata";
 
 export const metadata: Metadata = homeMetadata("es");
-export const viewport: Viewport = { themeColor: "#FFFFFF" };
+export const viewport: Viewport = { themeColor: "#060d22" };
 
 export default function Page() {
-  return <Home locale="es" />;
+  return <SignatureHome locale="es" />;
 }

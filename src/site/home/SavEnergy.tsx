@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { useBillAnalysis } from "@/lib/useBillAnalysis";
 import { useDropTarget } from "@/lib/useDropTarget";
@@ -430,12 +430,22 @@ function AdvisorPanel({ t, locale }: { t: Dictionary; locale: Locale }) {
 
 /* ------------------------------------------------------------------ */
 
-export function SavEnergy({ t, locale }: { t: Dictionary; locale: Locale }) {
+/** The three entry modes. Listens to the SavEnergy bus so any CTA can open it in a given mode. */
+export function SavConsole({ t, locale, className = "s-console" }: { t: Dictionary; locale: Locale; className?: string }) {
   const [mode, setMode] = useState<Mode>("upload");
   const [instant, setInstant] = useState(false);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const modes: Mode[] = ["upload", "estimate", "advisor"];
   const base = useId();
+
+  useEffect(() => {
+    const on = (e: Event) => {
+      setInstant(true);
+      setMode((e as CustomEvent<Mode>).detail);
+    };
+    window.addEventListener("a30:savenergy-mode", on);
+    return () => window.removeEventListener("a30:savenergy-mode", on);
+  }, []);
 
   const onKey = (e: React.KeyboardEvent, i: number) => {
     let n = -1;
@@ -451,6 +461,48 @@ export function SavEnergy({ t, locale }: { t: Dictionary; locale: Locale }) {
   };
 
   return (
+    <div className={className} id="savenergy-console">
+      <div className="s-console__bar">
+        <p className="s-console__label" id={`${base}-l`}>
+          {t.savenergy.modesLabel}
+        </p>
+        <div role="tablist" aria-labelledby={`${base}-l`} className="s-seg" data-pos={modes.indexOf(mode)} data-instant={instant || undefined}>
+          {modes.map((m, i) => (
+            <button
+              key={m}
+              ref={(el) => {
+                tabs.current[i] = el;
+              }}
+              role="tab"
+              type="button"
+              id={`${base}-t-${m}`}
+              aria-selected={mode === m}
+              aria-controls={`${base}-p`}
+              tabIndex={mode === m ? 0 : -1}
+              onClick={() => {
+                setInstant(false);
+                setMode(m);
+              }}
+              onKeyDown={(e) => onKey(e, i)}
+            >
+              {t.savenergy.modes[m]}
+            </button>
+          ))}
+          <span className="s-seg__thumb" aria-hidden="true" />
+        </div>
+      </div>
+      <div id={`${base}-p`} role="tabpanel" aria-labelledby={`${base}-t-${mode}`} className="s-console__panel" data-instant={instant || undefined} key={mode}>
+        {mode === "upload" ? <UploadPanel t={t} /> : null}
+        {mode === "estimate" ? <EstimatePanel t={t} /> : null}
+        {mode === "advisor" ? <AdvisorPanel t={t} locale={locale} /> : null}
+      </div>
+      <p className="s-console__foot">{t.common.simulationNote}</p>
+    </div>
+  );
+}
+
+export function SavEnergy({ t, locale }: { t: Dictionary; locale: Locale }) {
+  return (
     <section id="savenergy" className="s-savenergy" aria-labelledby="s-sav-title">
       <div className="s-wrap s-savenergy__head">
         <h2 id="s-sav-title" className="s-h2">
@@ -458,47 +510,9 @@ export function SavEnergy({ t, locale }: { t: Dictionary; locale: Locale }) {
         </h2>
         <p className="s-lede">{t.savenergy.lede}</p>
       </div>
-
       <Scan t={t} />
-
       <div className="s-wrap">
-        <div className="s-console">
-          <div className="s-console__bar">
-            <p className="s-console__label" id={`${base}-l`}>
-              {t.savenergy.modesLabel}
-            </p>
-            <div role="tablist" aria-labelledby={`${base}-l`} className="s-seg" data-pos={modes.indexOf(mode)} data-instant={instant || undefined}>
-              {modes.map((m, i) => (
-                <button
-                  key={m}
-                  ref={(el) => {
-                    tabs.current[i] = el;
-                  }}
-                  role="tab"
-                  type="button"
-                  id={`${base}-t-${m}`}
-                  aria-selected={mode === m}
-                  aria-controls={`${base}-p`}
-                  tabIndex={mode === m ? 0 : -1}
-                  onClick={() => {
-                    setInstant(false);
-                    setMode(m);
-                  }}
-                  onKeyDown={(e) => onKey(e, i)}
-                >
-                  {t.savenergy.modes[m]}
-                </button>
-              ))}
-              <span className="s-seg__thumb" aria-hidden="true" />
-            </div>
-          </div>
-          <div id={`${base}-p`} role="tabpanel" aria-labelledby={`${base}-t-${mode}`} className="s-console__panel" data-instant={instant || undefined} key={mode}>
-            {mode === "upload" ? <UploadPanel t={t} /> : null}
-            {mode === "estimate" ? <EstimatePanel t={t} /> : null}
-            {mode === "advisor" ? <AdvisorPanel t={t} locale={locale} /> : null}
-          </div>
-          <p className="s-console__foot">{t.common.simulationNote}</p>
-        </div>
+        <SavConsole t={t} locale={locale} />
       </div>
     </section>
   );
