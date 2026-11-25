@@ -155,6 +155,8 @@ const ca = {
     compareTitle: "Comparativa d’ofertes",
     compareNote: "Il·lustratiu: sense preus ni estalvis fins que es connecti el motor de comparatives.",
     compareBest: "Millor encaix per al teu perfil",
+    compareAnon: "Comercialitzadores anonimitzades",
+    yourProfile: "El teu perfil",
     offer: "Oferta",
     consoleTitle: "Comença amb la teva factura",
     servicesKicker: "Una mateixa energia. Cinc formes.",

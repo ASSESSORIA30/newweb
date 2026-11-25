@@ -5,16 +5,17 @@ import { RefreshOnFonts } from "@/site/home/RefreshOnFonts";
 import { JsonLd } from "@/site/seo/JsonLd";
 import { Footer } from "@/site/home/Footer";
 import { Audiences } from "@/site/home/Audiences";
-import { Process } from "@/site/home/Process";
+import { SigProcess } from "./SigProcess";
 import { Value } from "@/site/home/Value";
 import { Partners } from "@/site/home/Partners";
-import { Trust } from "@/site/home/Trust";
+import { SigTrust } from "./SigTrust";
 import { Collaborators } from "@/site/home/Collaborators";
 import { Close } from "@/site/home/Close";
 import { SignatureHero } from "./SignatureHero";
 import { SigSavEnergy } from "./SigSavEnergy";
 import { SigServices } from "./SigServices";
 import { SigReveal } from "./SigReveal";
+import { Widen } from "./Widen";
 
 /**
  * A3 Corporate · Signature. One continuous shot: night (the ring) → light (the bill) → night
@@ -29,6 +30,7 @@ export function SignatureHome({ locale }: { locale: Locale }) {
       </a>
       <SmoothScroll />
       <RefreshOnFonts />
+      <Widen />
       <Header t={t} locale={locale} />
       <main id="main">
         <SignatureHero t={t} />
@@ -42,13 +44,13 @@ export function SignatureHome({ locale }: { locale: Locale }) {
           <SigReveal tone="light">
             <div>
               <Audiences t={t} />
-              <Process t={t} />
             </div>
           </SigReveal>
         </div>
         <div className="g-chapter g-chapter--night">
           <SigReveal tone="night">
             <div>
+              <SigProcess t={t} />
               <Value t={t} />
             </div>
           </SigReveal>
@@ -57,7 +59,7 @@ export function SignatureHome({ locale }: { locale: Locale }) {
           <SigReveal tone="light">
             <div>
               <Partners t={t} />
-              <Trust t={t} locale={locale} />
+              <SigTrust t={t} locale={locale} />
             </div>
           </SigReveal>
         </div>

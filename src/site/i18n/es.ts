@@ -156,6 +156,8 @@ const es: Dictionary = {
     compareTitle: "Comparativa de ofertas",
     compareNote: "Ilustrativo: sin precios ni ahorros hasta que se conecte el motor de comparativas.",
     compareBest: "Mejor encaje para tu perfil",
+    compareAnon: "Comercializadoras anonimizadas",
+    yourProfile: "Tu perfil",
     offer: "Oferta",
     consoleTitle: "Empieza con tu factura",
     servicesKicker: "Una misma energía. Cinco formas.",

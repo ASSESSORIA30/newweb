@@ -23,7 +23,9 @@ export function SignatureHero({ t }: { t: Dictionary }) {
         });
         tl.to(".g-hero__copy", { yPercent: -18, opacity: 0, filter: "blur(10px)", duration: 0.35 }, 0)
           .to(".g-hero__dock", { y: 40, opacity: 0, duration: 0.2 }, 0)
-          .fromTo(".g-hero__light", { "--r": "0%" }, { "--r": "120%", duration: 0.4, ease: "power2.in" }, 0.58);
+          // The aperture opens from the ring's centre with a crisp edge; the next title is already in it.
+          .fromTo(".g-hero__light", { "--r": "0vmax" }, { "--r": "150vmax", duration: 0.42, ease: "power2.in" }, 0.56)
+          .fromTo(".g-hero__next", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.2, ease: "power2.out" }, 0.8);
       });
       return () => mm.revert();
     },
@@ -35,7 +37,12 @@ export function SignatureHero({ t }: { t: Dictionary }) {
       <div className="g-hero__stage">
         <div className="g-hero__poster" aria-hidden="true" />
         <RingScene className="g-hero__scene" onReady={() => setReady(true)} />
-        <div className="g-hero__light" aria-hidden="true" />
+        <div className="g-hero__light" aria-hidden="true">
+          <div className="g-hero__next">
+            <p className="g-display">{t.sig.savTitle}</p>
+            <p className="g-lede">{t.savenergy.lede}</p>
+          </div>
+        </div>
         <div className="g-hero__copy">
           <h1 id="g-hero-title" className="g-hero__title">
             <span className="g-hero__a">

@@ -86,10 +86,22 @@ export function RingScene({ className, onReady }: { className?: string; onReady?
       const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
       if (disposed) return;
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const shot = new URLSearchParams(window.location.search).get("ringshot") === "1";
       const high = tier === "high";
       const small = window.matchMedia("(max-width: 767px)").matches;
 
-      const renderer = new THREE.WebGLRenderer({ antialias: high, powerPreference: "high-performance" });
+      const renderer = new THREE.WebGLRenderer({ antialias: high || shot, alpha: shot, preserveDrawingBuffer: shot, powerPreference: "high-performance" });
+      // Software rasterisers (no GPU: SwiftShader, llvmpipe) would draw the glass on the main thread
+      // every frame. Keep the poster instead — same image, no cost. `?render=3d` forces it for testing.
+      const gl = renderer.getContext();
+      const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+      const gpu = dbg ? String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)) : "";
+      const force = new URLSearchParams(window.location.search).get("render") === "3d";
+      if (!force && /swiftshader|llvmpipe|software|basic render/i.test(gpu)) {
+        renderer.dispose();
+        host.dataset.fallback = "poster";
+        return;
+      }
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, high ? 1.75 : 1.25));
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.05;
@@ -98,26 +110,34 @@ export function RingScene({ className, onReady }: { className?: string; onReady?
       host.appendChild(renderer.domElement);
 
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color("#060d22");
+      scene.background = shot ? null : new THREE.Color("#050a1c");
       const pmrem = new THREE.PMREMGenerator(renderer);
       const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
       scene.environment = env;
-      scene.environmentIntensity = 0.9;
+      scene.environmentIntensity = 1.25;
 
       const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 120);
 
       /* ---------- Backdrop: deep navy light pool + measured graticule (refracted by the ring) ---------- */
+      const small0 = window.matchMedia("(max-width: 767px)").matches;
       const bgCanvas = document.createElement("canvas");
       bgCanvas.width = 2048;
       bgCanvas.height = 1152;
       const g = bgCanvas.getContext("2d")!;
-      const grad = g.createRadialGradient(1360, 520, 40, 1360, 520, 1100);
-      grad.addColorStop(0, "#1d3a8a");
-      grad.addColorStop(0.35, "#0f2257");
-      grad.addColorStop(1, "#050b1c");
-      g.fillStyle = grad;
+      g.fillStyle = "#050a1c";
       g.fillRect(0, 0, 2048, 1152);
-      g.strokeStyle = "rgba(132,185,255,0.07)";
+      // Backlight pool where the ring sits: the glass refracts this light into bright Fresnel edges.
+      const lx0 = small0 ? 1024 : 1360;
+      const ly0 = small0 ? 380 : 410;
+      const glow = g.createRadialGradient(lx0, ly0, 0, lx0, ly0, 720);
+      glow.addColorStop(0, "#dceaff");
+      glow.addColorStop(0.08, "#7fb0ff");
+      glow.addColorStop(0.28, "#2458ff");
+      glow.addColorStop(0.55, "#0d1e57");
+      glow.addColorStop(1, "rgba(5,10,28,0)");
+      g.fillStyle = glow;
+      g.fillRect(0, 0, 2048, 1152);
+      g.strokeStyle = "rgba(132,185,255,0.06)";
       g.lineWidth = 1;
       for (let x = 0; x <= 2048; x += 64) {
         g.beginPath();
@@ -131,41 +151,37 @@ export function RingScene({ className, onReady }: { className?: string; onReady?
         g.lineTo(2048, y + 0.5);
         g.stroke();
       }
-      g.strokeStyle = "rgba(132,185,255,0.12)";
-      for (const r of [180, 300, 460]) {
-        g.beginPath();
-        g.arc(1360, 520, r, 0, Math.PI * 2);
-        g.stroke();
-      }
       const bgTex = new THREE.CanvasTexture(bgCanvas);
       bgTex.colorSpace = THREE.SRGBColorSpace;
       const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(44, 24.75), new THREE.MeshBasicMaterial({ map: bgTex, toneMapped: false }));
       backdrop.position.set(0, 0, -9);
-      scene.add(backdrop);
+      if (!shot) scene.add(backdrop);
 
       /* ---------- The ring ---------- */
-      const ringPos = small ? new THREE.Vector3(0.1, 3.3, 0) : new THREE.Vector3(3.4, 0.35, 0);
-      const ringGeo = new THREE.TorusGeometry(2.05, 0.5, high ? 96 : 48, high ? 220 : 120);
+      const ringPos = small ? new THREE.Vector3(1.0, 2.35, 0) : new THREE.Vector3(3.55, 1.45, 0);
+      if (shot) ringPos.set(0, 0, 0);
+      const ringGeo = new THREE.TorusGeometry(2.05, 0.26, high ? 72 : 40, high ? 260 : 140);
       const ringMat = new THREE.MeshPhysicalMaterial({
         color: "#ffffff",
         metalness: 0,
-        roughness: 0.04,
+        roughness: 0.02,
         transmission: 1,
-        thickness: 1.6,
-        ior: 1.5,
-        dispersion: high ? 0.9 : 0,
-        attenuationColor: new THREE.Color("#9cc6ff"),
-        attenuationDistance: 2.6,
+        thickness: 0.75,
+        ior: 1.47,
+        dispersion: high ? 1.4 : 0.4,
+        attenuationColor: new THREE.Color("#eef5ff"),
+        attenuationDistance: 10,
         clearcoat: 1,
         clearcoatRoughness: 0.04,
         specularIntensity: 1,
-        envMapIntensity: 1.6,
+        envMapIntensity: 2.2,
       });
       const ring = new THREE.Mesh(ringGeo, ringMat);
       const ringRig = new THREE.Group();
       ringRig.position.copy(ringPos);
       ringRig.add(ring);
-      if (small) ringRig.scale.setScalar(0.56);
+      const markScale = small ? 0.5 : 0.74;
+      ringRig.scale.setScalar(markScale);
       scene.add(ringRig);
 
       /* ---------- Energy streams: chaos in, order out ---------- */
@@ -175,7 +191,7 @@ export function RingScene({ className, onReady }: { className?: string; onReady?
       const flows = new THREE.Group();
       for (let i = 0; i < N; i++) {
         const k = i / (N - 1) - 0.5;
-        const orderedY = ringPos.y + k * 1.9 * (small ? 0.56 : 1);
+        const orderedY = ringPos.y + k * 1.9 * (small ? 0.5 : 0.74);
         const pts = [
           new THREE.Vector3(-18, ringPos.y + (rand() - 0.5) * 12, -2 - rand() * 4),
           new THREE.Vector3(-10, ringPos.y + (rand() - 0.5) * 7, -1 + (rand() - 0.5) * 3),
@@ -194,9 +210,9 @@ export function RingScene({ className, onReady }: { className?: string; onReady?
             uSeed: { value: rand() },
             uSpeed: { value: 0.06 + rand() * 0.05 },
             uOrder: { value: 0.5 },
-            uDeep: { value: new THREE.Color("#0b1a44") },
-            uSky: { value: new THREE.Color(i % 3 === 0 ? "#2458ff" : "#84b9ff") },
-            uHot: { value: new THREE.Color("#eaf3ff") },
+            uDeep: { value: new THREE.Color("#1a3fb8") },
+            uSky: { value: new THREE.Color(i % 3 === 0 ? "#5c8dff" : "#9cc6ff").multiplyScalar(1.15) },
+            uHot: { value: new THREE.Color("#ffffff").multiplyScalar(2.0) },
           },
           toneMapped: false,
         });
@@ -213,10 +229,34 @@ export function RingScene({ className, onReady }: { className?: string; onReady?
         }
         mat.uniforms.uOrder.value = best;
         flowMats.push(mat);
-        const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, high ? 420 : 220, 0.016 + rand() * 0.018, high ? 8 : 5, false), mat);
+        const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, high ? 420 : 220, 0.012 + rand() * 0.014, high ? 8 : 5, false), mat);
         flows.add(tube);
       }
-      scene.add(flows);
+      if (!shot) scene.add(flows);
+
+      /* ---------- "3." set in the scene: the glass ring is its zero ---------- */
+      const typeCanvas = document.createElement("canvas");
+      typeCanvas.width = 1024;
+      typeCanvas.height = 1024;
+      const tg = typeCanvas.getContext("2d")!;
+      await document.fonts.load('700 100px "Anybody Variable"').catch(() => undefined);
+      const drawType = () => {
+        tg.clearRect(0, 0, 1024, 1024);
+        tg.fillStyle = "#ffffff";
+        tg.textAlign = "right";
+        tg.textBaseline = "alphabetic";
+        tg.font = '700 860px "Anybody Variable", "Geologica Variable", sans-serif';
+        (tg as unknown as { fontStretch: string }).fontStretch = "condensed";
+        tg.fillText("3.", 1010, 880);
+      };
+      drawType();
+      const typeTex = new THREE.CanvasTexture(typeCanvas);
+      typeTex.colorSpace = THREE.SRGBColorSpace;
+      const typeMat = new THREE.MeshBasicMaterial({ map: typeTex, transparent: true, toneMapped: false, color: new THREE.Color("#ffffff").multiplyScalar(0.94) });
+      const typePlane = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 5.4), typeMat);
+      typePlane.position.set(ringPos.x - 4.6 * markScale, ringPos.y - 0.25 * markScale, -0.4);
+      typePlane.scale.setScalar(markScale);
+      if (!shot) scene.add(typePlane);
 
       /* ---------- Light that follows the cursor ---------- */
       const key = new THREE.PointLight("#9fc4ff", 60, 30, 1.6);
@@ -226,10 +266,26 @@ export function RingScene({ className, onReady }: { className?: string; onReady?
       rim.position.set(6, -3, -4);
       scene.add(rim);
 
+      let composer: import("three/examples/jsm/postprocessing/EffectComposer.js").EffectComposer | null = null;
+      if (high && !shot) {
+        const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }] = await Promise.all([
+          import("three/examples/jsm/postprocessing/EffectComposer.js"),
+          import("three/examples/jsm/postprocessing/RenderPass.js"),
+          import("three/examples/jsm/postprocessing/UnrealBloomPass.js"),
+          import("three/examples/jsm/postprocessing/OutputPass.js"),
+        ]);
+        if (disposed) return;
+        composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        composer.addPass(new UnrealBloomPass(new THREE.Vector2(512, 512), 0.38, 0.35, 1.05));
+        composer.addPass(new OutputPass());
+      }
+
       const resize = () => {
         const w = host.clientWidth;
         const h = host.clientHeight;
         renderer.setSize(w, h, false);
+        composer?.setSize(w, h);
         camera.aspect = w / Math.max(h, 1);
         camera.updateProjectionMatrix();
       };
@@ -256,7 +312,7 @@ export function RingScene({ className, onReady }: { className?: string; onReady?
 
       /* ---------- Scroll: fly through the ring ---------- */
       const fly = { p: 0 };
-      const camStart = new THREE.Vector3(0, 0, small ? 12.5 : 12);
+      const camStart = shot ? new THREE.Vector3(0, 0, 7.2) : new THREE.Vector3(0, 0, small ? 12.5 : 12);
       // The camera stops just inside the ring: its glass rim frames the light that opens from its centre.
       const camEnd = new THREE.Vector3(ringPos.x, ringPos.y, 1.15);
       const look = new THREE.Vector3();
@@ -282,6 +338,7 @@ export function RingScene({ className, onReady }: { className?: string; onReady?
       let last = performance.now();
       let lastFly = -1;
       const ease = (t: number) => t * t * (3 - 2 * t);
+      const proj = new THREE.Vector3();
       const render = () => {
         const t = elapsed / 1000;
         for (const m of flowMats) m.uniforms.uTime.value = t;
@@ -300,7 +357,15 @@ export function RingScene({ className, onReady }: { className?: string; onReady?
         camera.lookAt(look);
         camera.fov = 34 + p * 18;
         camera.updateProjectionMatrix();
-        renderer.render(scene, camera);
+        typePlane.position.z = -0.4 - p * 6;
+        typeMat.opacity = 1 - Math.min(1, p * 1.6);
+        if (composer) composer.render();
+        else renderer.render(scene, camera);
+        // Where the ring's centre lands on screen: the next chapter's light opens from there.
+        proj.copy(ringRig.position).project(camera);
+        const stage = host.parentElement ?? host;
+        stage.style.setProperty("--cx", `${((proj.x + 1) / 2) * 100}%`);
+        stage.style.setProperty("--cy", `${((1 - proj.y) / 2) * 100}%`);
       };
       const tick = () => {
         const now = performance.now();
@@ -334,6 +399,9 @@ export function RingScene({ className, onReady }: { className?: string; onReady?
         flows.children.forEach((c) => (c as import("three").Mesh).geometry.dispose());
         flowMats.forEach((m) => m.dispose());
         ringGeo.dispose();
+        typeTex.dispose();
+        typeMat.dispose();
+        composer?.dispose();
         ringMat.dispose();
         bgTex.dispose();
         env.dispose();

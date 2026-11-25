@@ -9,7 +9,8 @@ export const defaultLocale: Locale = "ca";
  * Geologica kerns "l·l" so tightly that the punt volat merges with the l's ("CoHabora" at small sizes).
  * Hair spaces around it restore the Catalan ela geminada visually. Metadata keeps the plain text for search.
  */
-const HAIR = "\u200A";
+// Hair space wrapped in word joiners: wider than the default kerning, but never a line-break point.
+const HAIR = "\u2060\u200A\u2060";
 function openGeminada<T>(v: T): T {
   if (typeof v === "string") return v.replace(/l·l/g, `l${HAIR}·${HAIR}l`).replace(/L·L/g, `L${HAIR}·${HAIR}L`) as T;
   if (Array.isArray(v)) return v.map(openGeminada) as T;
