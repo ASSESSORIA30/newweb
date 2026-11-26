@@ -10,7 +10,7 @@ export interface Alternative { rank: number; label: string; product: string | nu
 export type Outcome =
   | { kind: "resultat"; asOf: string; current: { annualCost: number; monthlyCost: number }; alternatives: Alternative[]; hypotheses: string[]; supplierDisplay: "anonim" | "nom"; basis: "anual" | "anualitzat"; stale?: { periodTo: string | null } | null; variable?: boolean; consumption?: { kind: string; from: string | null; to: string | null } | null }
   | { kind: "assessor"; reason: string; detail?: string | null; current?: { annualCost: number; monthlyCost: number } | null; hypotheses?: string[] };
-export interface SessionState { status: string; readStatus: string | null; cupsMasked: string | null; fields: PublicField[]; missing: string[]; missingPrices: string[]; toConfirm: string[]; periods?: { energy: number; power: number }; notice?: "periode_curt" | "factura_antiga" | null; sips?: { status: string; annualKwh: number | null; periods: number[] | null; from: string | null; to: string | null } | null; outcome: Outcome | null; contactRequested: boolean }
+export interface SessionState { status: string; readStatus: string | null; cupsMasked: string | null; fields: PublicField[]; missing: string[]; missingPrices: string[]; toConfirm: string[]; energy?: "luz" | "gas"; periods?: { energy: number; power: number }; notice?: "periode_curt" | "factura_antiga" | null; sips?: { status: string; annualKwh: number | null; periods: number[] | null; from: string | null; to: string | null } | null; outcome: Outcome | null; contactRequested: boolean }
 
 export class SavError extends Error { constructor(public code: string, public status: number) { super(code); } }
 

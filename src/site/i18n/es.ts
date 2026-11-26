@@ -124,7 +124,7 @@ const es: Dictionary = {
       cups: "CUPS",
       confirm: "Confirma y compara",
       fields: { periodFrom: "Inicio del periodo facturado", periodTo: "Fin del periodo facturado", serviceFeeEur: "Servicios de la comercializadora en esta factura", customerKind: "Titular del contrato", "energyPrice.24h": "Precio de la energía (único, 24 h)", promoKwh: "Consumo en horas promocionadas", promoPrice: "Precio en horas promocionadas", restKwh: "Consumo en horas no promocionadas", restPrice: "Precio en horas no promocionadas", accessTariff: "Tarifa de acceso", days: "Días facturados", annualKwh: "Consumo del último año (si aparece en la factura)", "kwh.P1": "Consumo P1 (punta)", "kwh.P2": "Consumo P2 (llano)", "kwh.P3": "Consumo P3 (valle)", "kw.P1": "Potencia P1", "kw.P2": "Potencia P2", "energyPrice.P1": "Precio energía P1", "energyPrice.P2": "Precio energía P2", "energyPrice.P3": "Precio energía P3", energyDiscountPct: "Descuento sobre la energía (si lo hay)", "powerPrice.P1": "Precio potencia P1", "powerPrice.P2": "Precio potencia P2" },
-      units: { days: "días", kwh: "kWh", kw: "kW", energyPrice: "€/kWh", powerPrice: "€/kW·día", promoKwh: "kWh", restKwh: "kWh", promoPrice: "€/kWh", restPrice: "€/kWh", serviceFeeEur: "€" },
+      units: { days: "días", kwh: "kWh", kw: "kW", energyPrice: "€/kWh", powerPrice: "€/kW·día", promoKwh: "kWh", restKwh: "kWh", promoPrice: "€/kWh", restPrice: "€/kWh", serviceFeeEur: "€", gasFixedEurDay: "€/día" },
       kind: { particular: "Particular", empresa: "Empresa", hint: "No hemos podido identificar al titular con seguridad. Confírmalo, por favor." },
       notice: {
         periode_curt: "Hemos leído que esta factura cubre muy pocos días. Comprueba las fechas y los días facturados: si son correctos, no podremos calcularte un ahorro anual fiable y un asesor lo revisará contigo.",
@@ -149,6 +149,14 @@ const es: Dictionary = {
       limits: {
         reactive: "Tu factura incluye {eur} € de energía reactiva. Depende de la instalación, no de la comercializadora: no entra en la comparativa. Un asesor puede indicarte cómo reducirla.",
         excess: "Tu factura incluye {eur} € de excesos de potencia. Dependen de la potencia contratada, no de la comercializadora: no entran en la comparativa. Un asesor puede revisar si te conviene ajustarla.",
+      },
+      gas: {
+        fields: { "kwh.P1": "Consumo de gas facturado", "energyPrice.P1": "Precio del término variable", "energyPrice.24h": "Precio del término variable", gasFixedEurDay: "Término fijo", annualKwh: "Consumo de gas del último año (si aparece en la factura)", energyDiscountPct: "Descuento sobre el consumo (si lo hay)" } as Record<string, string>,
+        modes: { fix24h: "Precio fijo del gas", indexat: "Precio indexado o variable", desconegut: "No lo sé" } as Record<string, string>,
+        notes: {
+          indexat: "Con una tarifa de gas indexada, el precio cambia cada mes con el mercado: indica el precio de esta factura y la comparativa será orientativa.",
+          desconegut: "No pasa nada: sin tu precio actual no podemos calcular el ahorro en línea, pero un asesor lo revisará con tu factura.",
+        } as Record<string, string>,
       },
       mode: {
         label: "Cómo te facturan la energía",

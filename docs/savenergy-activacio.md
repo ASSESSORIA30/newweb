@@ -10,6 +10,8 @@ Estat: **desenvolupat, apagat**. El comparador real només funciona quan es comp
 
    I `070_savenergy_segments.sql` (segments d'empresa, 3.0TD i 6.1TD; no activa res): afegeix `business_max_annual_kwh` (2.000.000) i `business_max_power_kw` (1.000) a `sev_settings`, i la columna `provider` (`mock` / `real`) a `sev_sips_calls`. La funció `sev_reserve_sips` passa a exigir el proveïdor i a comptar els límits per proveïdor. **S'ha d'aplicar al mateix temps que el codi**: el codi nou crida la funció de tres paràmetres i el codi antic, la de dos.
 
+   I `071_savenergy_gas.sql` (comparador de gas; no activa res): afegeix `gas_max_annual_kwh` (300.000) a `sev_settings`.
+
 ### Segments (activables des del panell)
 
 | Segment | Què admet | Per defecte |
@@ -18,6 +20,7 @@ Estat: **desenvolupat, apagat**. El comparador real només funciona quan es comp
 | Electricitat 2.0TD · empreses | Titulars empresa o autònoms amb CIF; ofertes de pime o industrials | Desactivat |
 | Electricitat 3.0TD | Qualsevol titular; 6 períodes d'energia i 6 de potència | Desactivat |
 | Electricitat 6.1TD | Qualsevol titular; 6 i 6 | Desactivat |
+| Gas natural (RL.1 a RL.11) | Qualsevol titular; un sol període de consum i terme fix. La nomenclatura antiga 3.1–3.4 es converteix a RL.1–RL.4 | Desactivat |
 
 Cada oferta es mostra només als subministraments de la seva tarifa d'accés i segment, i si compleix les seves condicions (consum anual, potències i, a les tarifes amb trams, la potència P6): ho decideix el motor de comparatives del CRM, que és l'únic que calcula. Cal publicar expressament les ofertes de 3.0TD i 6.1TD a «Tarifes autoritzades per publicar».
 
@@ -32,6 +35,15 @@ Calen **totes** aquestes condicions perquè es faci una consulta: `sips_enabled`
 | `real` | Portal SIPS del CRM (`SIPS_USER` / `SIPS_PASSWORD`). **No l'activis** fins que s'hagin validat els permisos del proveïdor i hi hagi credencials de proves. |
 
 El SIPS simulat i el real no es barregen mai: cada dada porta el proveïdor que l'ha servida i només es reutilitza amb aquell mateix proveïdor; els límits i les estadístiques també es compten per separat. El simulat no llegeix ni escriu la memòria cau del SIPS real (`sips_cache`).
+
+**Temps d'espera del SIPS real.** Una consulta del servei intern pot arribar a ~90 s en el pitjor cas (inici de sessió, fins a quatre variants de cerca, resum i històric, amb 12 s cadascuna), i la funció que llegeix la factura en té 60. Des de la web la consulta va acotada:
+
+| Variable del CRM | Per defecte | Efecte |
+|---|---|---|
+| `SAVENERGY_SIPS_BUDGET_MS` | 20000 | Temps màxim de tota la consulta. Si s'esgota, es continua sense SIPS (comparativa orientativa). |
+| `SAVENERGY_SIPS_ERROR_COOLDOWN_MIN` | 15 | Minuts en què un error desat a la memòria cau no es torna a consultar des de la web (el servei intern el conserva 24 h o més). |
+
+Des de la web només es fan cerques exactes del CUPS (s'omet la cerca oberta per prefix, la que més sovint esgota el temps del portal). Després d'un temps esgotat o d'un error ja desat no es reintenta de seguida; el reintent immediat queda per a errors puntuals. Un error desat no consumeix quota.
 
 Només es consulta el CUPS llegit de la factura al servidor: cap operació pública n'accepta cap. El visitant veu el consum anual i les dates, mai el CUPS complet ni la resposta del SIPS. Les potències contractades són sempre les de la factura.
 2. Variables configurades a la web i al CRM.

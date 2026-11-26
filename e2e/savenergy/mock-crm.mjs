@@ -40,6 +40,14 @@ const triFields = [
   { key: "reactiveEur", value: 18.5, unit: "€", status: "llegit" },
 ];
 const triSessions = new Set();
+// Escenari «gas» (utm_source=gas): un sol període de consum, terme variable i terme fix (€/dia); sense potència.
+const gasFields = [
+  { key: "energyType", value: "gas", unit: null, status: "llegit" }, { key: "accessTariff", value: "RL.1", unit: null, status: "llegit" }, { key: "customerKind", value: "particular", unit: null, status: "llegit" },
+  { key: "days", value: 61, unit: "dies", status: "llegit" }, { key: "periodFrom", value: "2026-09-01", unit: "data", status: "llegit" }, { key: "periodTo", value: "2026-10-31", unit: "data", status: "llegit" },
+  { key: "annualKwh", value: 6200, unit: "kWh", status: "llegit" }, { key: "kwh.P1", value: 512, unit: "kWh", status: "llegit" }, { key: "energyPrice.P1", value: 0.0625, unit: "€/kWh", status: "llegit" },
+  { key: "gasFixedEurDay", value: 0.17326, unit: "€/dia", status: "llegit" }, { key: "priceMode", value: "fix24h", unit: null, status: "llegit" },
+];
+const gasSessions = new Set();
 // Escenari «SIPS» (sessions obertes amb l'autorització del titular): consum anual real SIMULAT; mai el CUPS complet.
 const sipsSessions = new Set();
 const sipsInfo = { status: "ok", annualKwh: 3420, periods: [980, 870, 1570], from: "2025-11-01", to: "2026-10-31" };
@@ -70,8 +78,9 @@ http.createServer((req, res) => {
     const old = oldSessions.has(data.session);
     const sipsOn = sipsSessions.has(data.session);
     const tri = triSessions.has(data.session);
-    const promo = tri ? { fields: triFields, toConfirm: [], periods: { energy: 6, power: 6 } } : sipsOn ? { sips: sipsInfo } : promoSessions.has(data.session) ? { fields: promoFields, toConfirm: [] } : old ? { fields: oldFields, toConfirm: ["customerKind"], notice: "factura_antiga" } : {};
-    if (m[1] === "session") { const id = randomUUID(); if (data.utm?.source === "promo") promoSessions.add(id); if (data.utm?.source === "antiga") oldSessions.add(id); if (data.utm?.source === "tri") triSessions.add(id); if (data.consents?.sips_titular === true && data.utm?.source === "sips") sipsSessions.add(id); return send(200, { session: id, access: "A".repeat(43), expiresAt: new Date(Date.now() + 864e5).toISOString(), maxBytes: 8388608, upload: { url: `http://localhost:${PORT}/upload/${randomUUID()}`, method: "PUT", headers: { "content-type": data.mime, "x-upsert": "false" } } }); }
+    const gasOn = gasSessions.has(data.session);
+    const promo = gasOn ? { fields: gasFields, toConfirm: [], energy: "gas", periods: { energy: 1, power: 0 } } : tri ? { fields: triFields, toConfirm: [], periods: { energy: 6, power: 6 } } : sipsOn ? { sips: sipsInfo } : promoSessions.has(data.session) ? { fields: promoFields, toConfirm: [] } : old ? { fields: oldFields, toConfirm: ["customerKind"], notice: "factura_antiga" } : {};
+    if (m[1] === "session") { const id = randomUUID(); if (data.utm?.source === "promo") promoSessions.add(id); if (data.utm?.source === "antiga") oldSessions.add(id); if (data.utm?.source === "tri") triSessions.add(id); if (data.utm?.source === "gas") gasSessions.add(id); if (data.consents?.sips_titular === true && data.utm?.source === "sips") sipsSessions.add(id); return send(200, { session: id, access: "A".repeat(43), expiresAt: new Date(Date.now() + 864e5).toISOString(), maxBytes: 8388608, upload: { url: `http://localhost:${PORT}/upload/${randomUUID()}`, method: "PUT", headers: { "content-type": data.mime, "x-upsert": "false" } } }); }
     if (m[1] === "analyse") return send(200, state("analitzant"));
     if (m[1] === "status") { polls += 1; return send(200, polls < 2 ? state("analitzant") : state("llegida", promo)); }
     if (m[1] === "confirm") return send(200, state("resultat", { ...promo, notice: null, outcome: old ? { ...outcome, stale: { periodTo: data.values.periodTo }, variable: true } : sipsOn ? { ...outcome, basis: "anual", consumption: { kind: "sips", from: sipsInfo.from, to: sipsInfo.to } } : { ...outcome, consumption: { kind: "factura_anualitzada", from: null, to: null } }, toConfirm: [] }));

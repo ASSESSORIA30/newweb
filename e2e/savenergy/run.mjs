@@ -202,6 +202,33 @@ for (const [lang, opts, tag] of [["", { viewport: { width: 1440, height: 900 } }
   await ctx.close();
 }
 
+// GAS: formulari d'un sol període de consum, amb terme variable i terme fix, sense potència
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const p = await ctx.newPage();
+  const errs = []; p.on("pageerror", (e) => errs.push(e.message));
+  await p.route("https://challenges.cloudflare.com/**", (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: TURNSTILE }));
+  await p.addInitScript(() => localStorage.setItem("a30.consent.v1", JSON.stringify({ v: 1, analytics: false, at: "x" })));
+  await p.goto(`http://localhost:${WEB}/?utm_source=gas`, { waitUntil: "networkidle" });
+  await p.evaluate(() => window.dispatchEvent(new CustomEvent("a30:savenergy-mode", { detail: "upload" })));
+  const panel = p.locator(".s-live").first();
+  for (const cb of await panel.locator(".s-check:not([data-sips-consent]) input[type=checkbox]").all()) await cb.check();
+  await panel.locator("input[type=file]").setInputFiles(PDF);
+  await p.waitForSelector(".s-live__grid", { timeout: 15000 });
+  const ids = await p.locator(".s-live__grid input").evaluateAll((els) => els.map((e) => e.id.replace("sev-", "")));
+  ok((await p.locator(".s-live__panel").getAttribute("data-energy")) === "gas" && ids.includes("kwh.P1") && ids.includes("gasFixedEurDay") && ids.includes("energyPrice.24h"), `gas · consum, terme variable i terme fix (${ids.join(", ")})`);
+  ok(!ids.some((k) => /^kw\.|^powerPrice\.|kwh\.P2|energyPrice\.P[1-6]|promo|rest/.test(k)), "gas · cap camp de potència ni de períodes d'electricitat");
+  ok((await p.locator('[id="sev-gasFixedEurDay"]').inputValue()) === "0,17326" && (await p.locator('[id="sev-energyPrice.24h"]').inputValue()) === "0,0625" && (await p.locator('[id="sev-kwh.P1"]').inputValue()) === "512", "gas · valors llegits presentats");
+  ok(/Terme fix/.test(await p.locator('label[for="sev-gasFixedEurDay"]').innerText()) && /€\/dia/.test(await p.locator('label[for="sev-gasFixedEurDay"]').innerText()) && /Consum de gas/.test(await p.locator('label[for="sev-kwh.P1"]').innerText()), "gas · etiquetes pròpies del gas (terme fix en €/dia)");
+  const opts = await p.locator("#sev-priceMode option").evaluateAll((els) => els.map((e) => e.value));
+  ok(JSON.stringify(opts) === JSON.stringify(["fix24h", "indexat", "desconegut"]) && (await p.locator("#sev-priceMode").inputValue()) === "fix24h", `gas · modalitats: fix, indexat o no ho sé (${opts.join(", ")})`);
+  ok((await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)), "gas · sense desbordament horitzontal");
+  await p.locator(".s-live__panel button[type=submit]").click();
+  await p.waitForSelector(".s-res__num");
+  ok(errs.length === 0, `gas · sense errors de pàgina ${errs.join("|")}`);
+  await ctx.close();
+}
+
 // SIPS amb autorització expressa: casella opcional i desmarcada; amb l'autorització, el resultat indica l'origen dels consums
 {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
@@ -261,7 +288,9 @@ ok(ops.length > 0 && ops.every((x) => x.sigOk), "totes les peticions al CRM port
 const sess = ops.find((x) => x.op === "session");
 const ov = ops.filter((x) => x.op === "confirm").map((x) => x.data.values).find((x) => x.periodTo === "2024-02-04");
 ok(ov && ov.periodFrom === "2024-01-05" && ov.customerKind === "particular" && ov.serviceFeeEur === 5.01, "antiga · la confirmació envia el període, el tipus de client confirmat i el servei");
-ok(ops.filter((x) => x.op === "confirm" && x.data.values.periodTo !== "2024-02-04" && x.data.values["kw.P6"] == null).every((x) => !("customerKind" in x.data.values) && x.data.values.periodTo === "2026-10-19"), "titular identificat: no es demana ni s'envia el tipus de client; el període llegit es confirma");
+ok(ops.filter((x) => x.op === "confirm" && x.data.values.periodTo !== "2024-02-04" && x.data.values["kw.P6"] == null && x.data.values.gasFixedEurDay == null).every((x) => !("customerKind" in x.data.values) && x.data.values.periodTo === "2026-10-19"), "titular identificat: no es demana ni s'envia el tipus de client; el període llegit es confirma");
+const gv = ops.filter((x) => x.op === "confirm").map((x) => x.data.values).find((x) => x.gasFixedEurDay != null);
+ok(gv && gv.gasFixedEurDay === 0.17326 && gv["kwh.P1"] === 512 && gv["energyPrice.P1"] === 0.0625 && gv.annualKwh === 6200 && !("kw.P1" in gv) && !("powerPrice.P1" in gv) && !("kwh.P2" in gv), "gas · la confirmació envia consum, terme variable i terme fix, i cap potència");
 const tv = ops.filter((x) => x.op === "confirm").map((x) => x.data.values).find((x) => x["kw.P6"] != null);
 ok(tv && tv["kw.P6"] === 45 && tv["kwh.P6"] === 1200 && tv["energyPrice.P6"] === 0.11 && tv["powerPrice.P6"] === 0.005 && tv.promoKwh === null && !("customerKind" in tv), "3.0TD · la confirmació envia els sis períodes d'energia, potència i preus");
 const sessions = ops.filter((x) => x.op === "session");
@@ -272,12 +301,12 @@ ok(pv && pv.promoKwh === 212.72 && pv.promoPrice === 0.1349 && pv.restKwh === 36
 ok(sess && !("turnstileToken" in sess.data) && sess.data.turnstile === "verificat", "Turnstile validat al servidor de la web i no reenviat");
 ok(sess.data.ref === "col. c34" && sess.data.utm?.source === "prova", "codi de col·laborador històric i UTM reenviats");
 ok(sess.data.consents.privacitat_servei === true && sess.data.consents.factura_temporal === true && sess.data.consentVersion === "2026-11-sev1", "consentiments i versió enviats");
-const confirms = ops.filter((x) => x.op === "confirm" && x.data.values.promoKwh == null && x.data.values.periodTo !== "2024-02-04" && x.data.values["kw.P6"] == null);
+const confirms = ops.filter((x) => x.op === "confirm" && x.data.values.promoKwh == null && x.data.values.periodTo !== "2024-02-04" && x.data.values["kw.P6"] == null && x.data.values.gasFixedEurDay == null);
 ok(confirms.every((x) => x.data.values.promoKwh === null && x.data.values["energyPrice.P1"] === 0.24), "per franges · s'envien P1–P3 i cap franja comercial");
 ok(confirms.length === 4 && confirms.every((x) => x.data.values.annualKwh === 2253 && x.data.values["kwh.P1"] === 80), "la confirmació envia tots els valors, inclòs el consum anual");
 const lead = ops.find((x) => x.op === "lead");
 ok(lead && lead.data.phone === "600111222" && lead.data.acceptCommercial === false && /^[0-9a-f-]{36}$/.test(lead.data.idempotencyKey), "lead: telèfon, clau d'idempotència i consentiment");
-ok(log.filter((x) => x.op === "upload").length === 7, "la factura es puja directament a l'URL signada");
+ok(log.filter((x) => x.op === "upload").length === 8, "la factura es puja directament a l'URL signada");
 
 await browser.close();
 stop();
