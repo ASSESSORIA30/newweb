@@ -11,7 +11,7 @@ const items = [
 export function ConceptSwitcher({ current }: { current: "A" | "B" | "C" }) {
   return (
     <nav aria-label="Propostes" className="proto-switcher" translate="no">
-      <Link href="/" transitionTypes={["nav-back"]} className="proto-switcher__home">
+      <Link href="/propostes" transitionTypes={["nav-back"]} className="proto-switcher__home">
         Propostes
       </Link>
       {items.map((it) => (

@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { setMotionPaused } from "@/lib/motion";
 
-export function MotionToggle({ className }: { className?: string }) {
+export function MotionToggle({
+  className,
+  labels = { pause: "Atura l’animació", resume: "Reprèn l’animació" },
+}: {
+  className?: string;
+  labels?: { pause: string; resume: string };
+}) {
   const [paused, setPaused] = useState(false);
   useEffect(() => () => setMotionPaused(false), []);
   return (
@@ -21,7 +27,7 @@ export function MotionToggle({ className }: { className?: string }) {
       <svg viewBox="0 0 12 12" aria-hidden="true" width="12" height="12">
         {paused ? <path d="M3 2 L10 6 L3 10 Z" fill="currentColor" /> : <path d="M3 2h2v8H3zM7 2h2v8H7z" fill="currentColor" />}
       </svg>
-      {paused ? "Reprèn l’animació" : "Atura l’animació"}
+      {paused ? labels.resume : labels.pause}
     </button>
   );
 }

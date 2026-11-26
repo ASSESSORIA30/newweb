@@ -6,6 +6,11 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   // Override default ignores of eslint-config-next.
+  {
+    // Brand marks are pre-sized static files: serving them with <img> avoids Vercel Image Optimization usage.
+    files: ["src/site/**/*.tsx"],
+    rules: { "@next/next/no-img-element": "off" },
+  },
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
