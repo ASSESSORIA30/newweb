@@ -12,6 +12,24 @@ Estat: **desenvolupat, apagat**. El comparador real només funciona quan es comp
 
    I `071_savenergy_gas.sql` (comparador de gas; no activa res): afegeix `gas_max_annual_kwh` (300.000) a `sev_settings`.
 
+   I `072_savenergy_seguretat.sql` (fase final de seguretat; no activa res): taula `sev_rate` i funció atòmica `sev_rate_hit` (límit de peticions repetitives), columna `sev_sessions.lead_claimed_at` (un sol lead davant de peticions simultànies) i revocació explícita de permisos de totes les taules i funcions `sev_*` per a `anon` i `authenticated`.
+
+### Seguretat entre la web i el CRM
+
+- **Signatura versió 2**: la IP del visitant forma part de la signatura HMAC. La web i el CRM **s'han de desplegar alhora**: el CRM rebutja les signatures de la versió anterior (sense IP) i la web nova només signa amb la versió 2.
+- **Turnstile**: el servidor de la web exigeix `success`, l'acció `savenergy`, que el repte sigui recent (5 minuts) i que el domini on s'ha resolt sigui un dels admesos. Per defecte, el domini de la mateixa petició; per fixar-los, `TURNSTILE_ALLOWED_HOSTS` (separats per comes) al projecte de la web. A Cloudflare, el widget ha de tenir només els dominis propis.
+- **Límit de peticions** (per connexió i 10 minuts): visites 30, obertures de sessió 30, anàlisis 30, consultes d'estat 600, confirmacions 60, sol·licituds de contacte 12. La petició que el supera rep `429`.
+
+### Neteja automàtica i termini de conservació
+
+El visitant és informat que la factura s'elimina en un màxim de 24 hores si no demana contacte. Vercel Hobby només permet un cron diari, de manera que la freqüència horària la dona **Supabase Cron**: executa `supabase/optional/savenergy_neteja_cada_hora.sql` (del repositori del CRM) al projecte de Supabase. Necessita `pg_cron`, `pg_net` i els secrets de Vault `crm_app_url` i `crm_cron_secret`; si el CRM és una **Preview protegida**, també `crm_protection_bypass` (el valor de «Protection Bypass for Automation» de Vercel). El fitxer inclou les consultes de comprovació. Encara que la neteja no hagués passat, el servidor rebutja qualsevol sessió caducada.
+
+La neteja elimina: fitxers temporals i sessions sense contacte caducades, fitxers orfes, lectures i resultats de sessions que ja són un lead, nonces, comptadors de peticions i reserves d'IA o de SIPS que hagin quedat penjades. Les factures dels leads autoritzats són en un altre bucket (`lead-documents`) i no es toquen.
+
+### Tarifes aptes
+
+A «Tarifes autoritzades per publicar», el panell valida cada tarifa amb el motor de comparatives i en mostra l'aptitud i el motiu d'exclusió. «Selecciona automàticament les aptes» marca només les aptes; una tarifa exclosa no es pot publicar i, si deixa de ser apta, deixa de mostrar-se encara que continuï publicada. El mateix informe es pot obtenir amb `scripts/savenergy-valida-tarifes.ts` (només lectura).
+
 ### Segments (activables des del panell)
 
 | Segment | Què admet | Per defecte |

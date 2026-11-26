@@ -238,7 +238,7 @@ const ca = {
         limit: "Has fet massa intents en poca estona. Torna-ho a provar d'aquí a una estona o parla amb un assessor.",
         pujada_fallida: "No s'ha pogut pujar la factura. Torna-ho a provar.",
         sessio_caducada: "La sessió ha caducat. Torna a pujar la factura.",
-        lectura_massa_llarga: "La lectura està trigant més del normal. Un assessor la pot revisar.",
+        massa_peticions: "Has fet massa peticions seguides. Espera uns minuts i torna-ho a provar.", lectura_massa_llarga: "La lectura està trigant més del normal. Un assessor la pot revisar.",
         sense_connexio: "Sembla que no hi ha connexió. Torna-ho a provar.",
         generic: "Alguna cosa no ha funcionat. Torna-ho a provar o parla amb un assessor.",
       } as Record<string, string>,

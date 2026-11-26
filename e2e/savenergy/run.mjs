@@ -282,6 +282,23 @@ for (const [lang, opts, tag] of [["", { viewport: { width: 1440, height: 900 } }
   await ctx.close();
 }
 
+// Turnstile: el servidor de la web rebutja testimonis d'un altre domini, d'una altra acció o antics (i no arriben al CRM)
+{
+  const post = (token) => fetch(`http://localhost:${WEB}/api/savenergy/session`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ locale: "ca", turnstileToken: token, mime: "application/pdf", bytes: 1000, consents: { privacitat_servei: true, factura_temporal: true }, utm: { source: "turnstile-prova" } }) });
+  const codes = [];
+  for (const t of ["evil-token-0123456789", "accio-token-0123456789", "antic-token-0123456789", "curt"]) { const r = await post(t); codes.push(r.status); }
+  ok(codes.every((c) => c === 403), `Turnstile · domini aliè, acció aliena, repte antic i testimoni invàlid → 403 (${codes.join(", ")})`);
+  const good = await post("ok-token-0123456789");
+  ok(good.status === 200, "Turnstile · un testimoni vàlid del domini propi i de l'acció del comparador passa");
+}
+// Política de privacitat: informa del tractament automatitzat, la IA, el SIPS, la conservació i els drets (ca i es)
+{
+  const ca = await (await fetch(`http://localhost:${WEB}/privacitat`)).text();
+  const es = await (await fetch(`http://localhost:${WEB}/es/privacidad`)).text();
+  ok(["tractament automatitzat de factures", "Anthropic", "SIPS", "màxim de 24 hores", "Agència Espanyola de Protecció de Dades", "retirar el consentiment", "intervenció d&#x27;una persona"].every((x) => ca.includes(x) || ca.includes(x.replace("&#x27;", "'"))), "privacitat (ca) · tractament automatitzat, Anthropic, SIPS, conservació i drets");
+  ok(["tratamiento automatizado de facturas", "Anthropic", "SIPS", "máximo de 24 horas", "Agencia Española de Protección de Datos", "retirar el consentimiento"].every((x) => es.includes(x)), "privacitat (es) · tratamiento automatizado, Anthropic, SIPS, conservación y derechos");
+}
+
 const log = await (await fetch(`http://localhost:${CRM}/__log`)).json();
 const ops = log.filter((x) => x.op !== "upload");
 ok(ops.length > 0 && ops.every((x) => x.sigOk), "totes les peticions al CRM porten una signatura vàlida");
@@ -293,7 +310,9 @@ const gv = ops.filter((x) => x.op === "confirm").map((x) => x.data.values).find(
 ok(gv && gv.gasFixedEurDay === 0.17326 && gv["kwh.P1"] === 512 && gv["energyPrice.P1"] === 0.0625 && gv.annualKwh === 6200 && !("kw.P1" in gv) && !("powerPrice.P1" in gv) && !("kwh.P2" in gv), "gas · la confirmació envia consum, terme variable i terme fix, i cap potència");
 const tv = ops.filter((x) => x.op === "confirm").map((x) => x.data.values).find((x) => x["kw.P6"] != null);
 ok(tv && tv["kw.P6"] === 45 && tv["kwh.P6"] === 1200 && tv["energyPrice.P6"] === 0.11 && tv["powerPrice.P6"] === 0.005 && tv.promoKwh === null && !("customerKind" in tv), "3.0TD · la confirmació envia els sis períodes d'energia, potència i preus");
-const sessions = ops.filter((x) => x.op === "session");
+ok(ops.filter((x) => x.op === "session" && x.data.utm?.source === "turnstile-prova").length === 1, "Turnstile · les peticions rebutjades no arriben al CRM (només hi arriba la vàlida)");
+ok(ops.every((x) => /^[0-9a-fA-F:.]{3,64}$/.test(x.ip ?? "")), "totes les peticions porten la IP del visitant dins de la signatura (versió 2)");
+const sessions = ops.filter((x) => x.op === "session" && x.data.utm?.source !== "turnstile-prova");
 ok(sessions.filter((x) => x.data.consents.sips_titular === true).length === 1 && sessions.filter((x) => x.data.consents.sips_titular === false).length === sessions.length - 1, "sips · l'autorització només s'envia quan el visitant la marca");
 ok(ops.every((x) => !/"cups"/i.test(JSON.stringify(x.data))), "sips · el navegador no envia mai cap CUPS");
 const pv = ops.filter((x) => x.op === "confirm").map((x) => x.data.values).find((x) => x.promoKwh != null);

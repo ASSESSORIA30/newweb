@@ -63,14 +63,20 @@ http.createServer((req, res) => {
   let body = ""; req.on("data", (c) => (body += c)); req.on("end", () => {
     const send = (code, obj, h = {}) => { res.writeHead(code, { "content-type": "application/json", ...h }); res.end(JSON.stringify(obj)); };
     if (req.url === "/__log") return send(200, log);
-    if (req.url === "/turnstile") { const p = new URLSearchParams(body); return send(200, { success: p.get("response") === "ok-token-0123456789" && p.get("secret") === "test-secret", action: "savenergy" }); }
+    // testimonis de prova per comprovar el rebuig: un altre domini, una altra acció i un repte antic
+    if (req.url === "/turnstile" && /^(evil|accio|antic)-token/.test(new URLSearchParams(body).get("response") ?? "")) {
+      const t = new URLSearchParams(body).get("response");
+      return send(200, { success: true, action: t.startsWith("accio") ? "login" : "savenergy", hostname: t.startsWith("evil") ? "un-altre-lloc.example" : "localhost", challenge_ts: new Date(Date.now() - (t.startsWith("antic") ? 3600e3 : 0)).toISOString() });
+    }
+    if (req.url === "/turnstile") { const p = new URLSearchParams(body); return send(200, { success: p.get("response") === "ok-token-0123456789" && p.get("secret") === "test-secret", action: "savenergy", hostname: "localhost", challenge_ts: new Date().toISOString() }); }
     if (req.url.startsWith("/upload/")) { log.push({ op: "upload", bytes: body.length, type: req.headers["content-type"] }); return send(200, { Key: "ok" }, cors); }
     const m = /^\/api\/public\/savenergy\/(\w+)$/.exec(req.url);
     if (!m) return send(404, { error: "no_trobat" });
     const [ts, nonce, sig] = [req.headers["x-a30-ts"], req.headers["x-a30-nonce"], req.headers["x-a30-signature"]];
-    const expected = createHmac("sha256", SECRET).update(`${ts}.${nonce}.POST.${req.url}.${sha(body)}`).digest("hex");
+    const ip = req.headers["x-a30-client-ip"];
+    const expected = createHmac("sha256", SECRET).update(`v2.${ts}.${nonce}.POST.${req.url}.${sha(body)}.${ip}`).digest("hex");
     const fresh = Math.abs(Date.now() / 1000 - Number(ts)) < 300;
-    if (!sig || sig !== expected || !fresh) { log.push({ op: m[1], sigOk: false }); return send(401, { error: "Signatura no vàlida" }); }
+    if (!sig || sig !== expected || !fresh || req.headers["x-a30-sig-v"] !== "2" || !ip) { log.push({ op: m[1], sigOk: false }); return send(401, { error: "Signatura no vàlida" }); }
     if (seen.has(nonce)) return send(409, { error: "Petició repetida" });
     seen.add(nonce);
     const data = body ? JSON.parse(body) : {};

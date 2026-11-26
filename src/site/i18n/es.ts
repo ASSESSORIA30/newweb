@@ -239,7 +239,7 @@ const es: Dictionary = {
         limit: "Has hecho demasiados intentos en poco tiempo. Vuelve a intentarlo dentro de un rato o habla con un asesor.",
         pujada_fallida: "No se ha podido subir la factura. Vuelve a intentarlo.",
         sessio_caducada: "La sesión ha caducado. Vuelve a subir la factura.",
-        lectura_massa_llarga: "La lectura está tardando más de lo normal. Un asesor la puede revisar.",
+        massa_peticions: "Has hecho demasiadas peticiones seguidas. Espera unos minutos y vuelve a intentarlo.", lectura_massa_llarga: "La lectura está tardando más de lo normal. Un asesor la puede revisar.",
         sense_connexio: "Parece que no hay conexión. Vuelve a intentarlo.",
         generic: "Algo no ha funcionado. Vuelve a intentarlo o habla con un asesor.",
       } as Record<string, string>,

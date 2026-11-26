@@ -1,4 +1,4 @@
-import { clientIp, MAX_BODY, OPS, savenergyConfig, sign, verifyTurnstile, type Op } from "@/site/savenergy/server";
+import { clientIp, MAX_BODY, OPS, savenergyConfig, sign, verifyTurnstile, type Op, turnstileHosts } from "@/site/savenergy/server";
 
 export const maxDuration = 30;
 
@@ -22,7 +22,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ op: string }> 
   if (typeof data !== "object" || data === null || Array.isArray(data)) return json({ error: "peticio_no_valida" }, 400);
   const ip = clientIp(req.headers);
   if ((op as Op) === "session") {
-    const ok = await verifyTurnstile(cfg.turnstile, data.turnstileToken, ip);
+    const ok = await verifyTurnstile(cfg.turnstile, data.turnstileToken, ip, fetch, turnstileHosts(req.headers.get("x-forwarded-host") ?? req.headers.get("host")));
     if (!ok) return json({ error: "verificacio_antibot" }, 403);
     delete data.turnstileToken;
     data.turnstile = "verificat";
@@ -32,7 +32,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ op: string }> 
   try {
     const r = await fetch(`${cfg.crm}${path}`, {
       method: "POST", body, cache: "no-store", signal: AbortSignal.timeout(25_000),
-      headers: { "content-type": "application/json", "x-a30-client-ip": ip, ...(cfg.bypass ? { "x-vercel-protection-bypass": cfg.bypass } : {}), ...sign(cfg.secret, "POST", path, body) },
+      headers: { "content-type": "application/json", ...(cfg.bypass ? { "x-vercel-protection-bypass": cfg.bypass } : {}), ...sign(cfg.secret, "POST", path, body, ip) },
     });
     const out = await r.json().catch(() => ({ error: "error_intern" }));
     return json(out, r.status);

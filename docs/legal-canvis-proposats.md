@@ -19,6 +19,15 @@ Aquesta llista recull el que caldria **actualitzar** per les tecnologies i funci
 8. **SavEnergy IA (fase següent)**: quan s'activi la pujada de factures, informar del proveïdor d'IA, de la conservació de les factures i que no es prenen decisions automatitzades amb efectes jurídics.
 9. **Coherència**: la versió castellana diu «Asesoría 3.0 AE, SL» en alguns apartats i «Assessoria 3.0 AE, SL» en d'altres; unificar amb la denominació social. Unificar també el format del telèfon (973982852 / 973 982 852).
 
+### Aplicat el 26/11/2026: apartat 11 de la Política de privacitat (ca i es)
+
+S'ha afegit a `src/site/legal/content.ts` l'apartat «11. Comparador SavEnergy IA: tractament automatitzat de factures» (finalitat i base jurídica, dades tractades, lectura automàtica i IA d'Anthropic amb text emmascarat, consulta del SIPS amb autorització, conservació de 24 hores, encarregats i drets). **Abans de publicar-lo, cal que l'assessor legal confirmi:**
+
+1. La frase sobre la **transferència internacional** a Anthropic («amb les garanties adequades que exigeix el RGPD»): depèn del contracte d'encàrrec de tractament signat amb Anthropic i del mecanisme concret (clàusules contractuals tipus, marc UE–EUA…).
+2. La llista d'**encarregats** (Anthropic, Vercel, Supabase, Cloudflare) i que hi ha contracte d'encàrrec amb cadascun.
+3. Que el termini de **24 hores** coincideix amb `retention_hours` del panell (si es canvia, cal canviar el text).
+4. La coherència amb l'apartat «10. Acceptació», que continua pendent (vegeu el punt 4 de més amunt).
+
 ### Addicions per SavEnergy IA (comparador amb factura)
 
 10. **Finalitat**: calcular una comparativa orientativa a partir de la factura que aporta el visitant (lectura automàtica de text i, si cal, amb IA).
