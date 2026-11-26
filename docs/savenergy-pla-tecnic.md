@@ -167,7 +167,7 @@ Comptadors diaris a `sev_usage` (dia, lectures IA, crides SIPS, sessions, PDF). 
 ## 7. Modificacions estrictament necessàries
 
 **CRM (`renovaciosC`) · branca nova, sense tocar producció**
-1. `supabase/migrations/067_savenergy_web.sql` (+ `_down`):
+1. `supabase/migrations/068_savenergy_web.sql` (+ `_down`):
    - taules `sev_settings`, `sev_public_offers`, `sev_sessions`, `sev_usage` i `sev_nonces`, amb RLS activat i sense polítiques (només service role);
    - bucket `savenergy-tmp`.
 2. `src/core/savenergy.ts` (pur i provable):

@@ -1,18 +1,20 @@
+> **Numeració (27/11/2026).** En integrar la versió actual del CRM de producció (`main`, que ja té una migració 067), les migracions de SavEnergy s'han renumerat de 067–072 a **068–073**. Només n'ha canviat el nom: el contingut és idèntic al que es va aplicar a proves. El procediment complet de publicació a producció és a `SAVENERGY_PUBLICACIO_PRODUCCIO.md`, al repositori del CRM.
+
 # SavEnergy IA · activació i proves (2.0TD residencial)
 
 Estat: **desenvolupat, apagat**. El comparador real només funciona quan es compleixen **totes** aquestes condicions:
-1. Migració `067_savenergy_web.sql` aplicada (primer en una base de dades de proves aïllada).
-   Després, `068_savenergy_fiabilitat.sql`: només afegeix tres paràmetres a `sev_settings` (no activa res):
+1. Migració `068_savenergy_web.sql` aplicada (primer en una base de dades de proves aïllada).
+   Després, `069_savenergy_fiabilitat.sql`: només afegeix tres paràmetres a `sev_settings` (no activa res):
    - `min_invoice_days` (20) i `max_invoice_age_months` (12): una factura massa curta o massa antiga no mostra cap estalvi anual i es deriva a un assessor;
    - `ai_fallback` (`essencials`): quan es recorre a la IA després de l'extracció directa del PDF i la validació de coherència — `mai`, `essencials` (falten dades imprescindibles) o `contradiccions` (també si la lectura és completa però incoherent). Sempre amb `ai_enabled` actiu i dins dels límits de `sev_reserve_ai`; amb la IA desactivada no es fa mai cap crida.
-   Si la base de dades de proves ja es va inicialitzar amb la 067, n'hi ha prou d'executar-hi el fitxer `068_savenergy_fiabilitat.sql`.
-   I `069_savenergy_sips.sql` (consulta SIPS des de la web; tampoc activa res): afegeix `sips_per_session` (1), `sips_retries` (1) i `sips_max_age_months` (6) a `sev_settings`, la taula `sev_sips_calls` (recompte de consultes, sense cap CUPS) i les funcions de reserva atòmica `sev_reserve_sips` / `sev_settle_sips`.
+   Si la base de dades de proves ja es va inicialitzar amb la primera migració de SavEnergy, n'hi ha prou d'executar-hi el fitxer `069_savenergy_fiabilitat.sql`.
+   I `070_savenergy_sips.sql` (consulta SIPS des de la web; tampoc activa res): afegeix `sips_per_session` (1), `sips_retries` (1) i `sips_max_age_months` (6) a `sev_settings`, la taula `sev_sips_calls` (recompte de consultes, sense cap CUPS) i les funcions de reserva atòmica `sev_reserve_sips` / `sev_settle_sips`.
 
-   I `070_savenergy_segments.sql` (segments d'empresa, 3.0TD i 6.1TD; no activa res): afegeix `business_max_annual_kwh` (2.000.000) i `business_max_power_kw` (1.000) a `sev_settings`, i la columna `provider` (`mock` / `real`) a `sev_sips_calls`. La funció `sev_reserve_sips` passa a exigir el proveïdor i a comptar els límits per proveïdor. **S'ha d'aplicar al mateix temps que el codi**: el codi nou crida la funció de tres paràmetres i el codi antic, la de dos.
+   I `071_savenergy_segments.sql` (segments d'empresa, 3.0TD i 6.1TD; no activa res): afegeix `business_max_annual_kwh` (2.000.000) i `business_max_power_kw` (1.000) a `sev_settings`, i la columna `provider` (`mock` / `real`) a `sev_sips_calls`. La funció `sev_reserve_sips` passa a exigir el proveïdor i a comptar els límits per proveïdor. **S'ha d'aplicar al mateix temps que el codi**: el codi nou crida la funció de tres paràmetres i el codi antic, la de dos.
 
-   I `071_savenergy_gas.sql` (comparador de gas; no activa res): afegeix `gas_max_annual_kwh` (300.000) a `sev_settings`.
+   I `072_savenergy_gas.sql` (comparador de gas; no activa res): afegeix `gas_max_annual_kwh` (300.000) a `sev_settings`.
 
-   I `072_savenergy_seguretat.sql` (fase final de seguretat; no activa res): taula `sev_rate` i funció atòmica `sev_rate_hit` (límit de peticions repetitives), columna `sev_sessions.lead_claimed_at` (un sol lead davant de peticions simultànies) i revocació explícita de permisos de totes les taules i funcions `sev_*` per a `anon` i `authenticated`.
+   I `073_savenergy_seguretat.sql` (fase final de seguretat; no activa res): taula `sev_rate` i funció atòmica `sev_rate_hit` (límit de peticions repetitives), columna `sev_sessions.lead_claimed_at` (un sol lead davant de peticions simultànies) i revocació explícita de permisos de totes les taules i funcions `sev_*` per a `anon` i `authenticated`.
 
 ### Seguretat entre la web i el CRM
 
