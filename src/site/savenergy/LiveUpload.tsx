@@ -353,25 +353,28 @@ function Result({ t, o, headRef, locale, cta }: { t: Dictionary; o: Extract<Outc
   const eur = (n: number) => n.toLocaleString(tag, { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
   const pct = (n: number) => `${n.toLocaleString(tag, { maximumFractionDigits: 1 })} %`;
   const best = o.alternatives[0];
-  const counted = useCountUp(Math.round(best.saving));
+  const counted = useCountUp(Math.abs(best.saving));
+  const savingLabel = (saving: number) => saving > 0 ? L.savingPerYear : saving < 0 ? L.morePerYear : L.samePerYear;
+  const monthLabel = (saving: number) => saving > 0 ? L.lessPerMonth : saving < 0 ? L.morePerMonth : L.samePerMonth;
+  const percentDifference = (savingPct: number) => `${savingPct > 0 ? "−" : savingPct < 0 ? "+" : ""}${pct(Math.abs(savingPct))}`;
   const estimate = o.basis === "anualitzat";
   return (
     <div className="s-live__result">
       <section className="s-res" aria-labelledby="s-res-title">
         <div className="s-res__top">
-          <h3 id="s-res-title" ref={headRef} tabIndex={-1} className="s-res__kicker">{o.stale ? L.stale.title : L.heroTitle}</h3>
+          <h3 id="s-res-title" ref={headRef} tabIndex={-1} className="s-res__kicker">{o.stale ? L.stale.title : best.saving > 0 ? L.heroTitle : L.keepCurrent}</h3>
           {o.stale ? <span className="s-res__tag s-res__tag--warn">{L.stale.tag}</span> : estimate ? <span className="s-res__tag">{L.orientative}</span> : null}
           {o.variable ? <span className="s-res__tag">{L.variable.tag}</span> : null}
         </div>
         {o.stale ? <p className="s-res__warn" role="note" data-stale>{L.stale.warning}</p> : null}
         <p className="s-res__figure">
           <span className="s-res__num" aria-hidden="true">{eur(counted)}</span>
-          <span className="sr-only">{eur(best.saving)}</span>
-          <span className="s-res__unit">{o.stale ? L.stale.saving : L.heroSaving}</span>
+          <span className="sr-only">{eur(Math.abs(best.saving))}</span>
+          <span className="s-res__unit">{best.saving > 0 ? (o.stale ? L.stale.saving : L.heroSaving) : savingLabel(best.saving)}</span>
         </p>
         <ul className="s-res__facts">
-          <li><b>{eur(best.savingMonthly)}</b> {L.lessPerMonth}</li>
-          <li><b>{pct(best.savingPct)}</b> {L.pctSaving}</li>
+          <li><b>{eur(Math.abs(best.savingMonthly))}</b> {monthLabel(best.saving)}</li>
+          <li><b>{percentDifference(best.savingPct)}</b> {L.pctDifference}</li>
         </ul>
         <dl className="s-res__costs">
           <div><dt>{L.currentCostShort}</dt><dd>{eur(o.current.annualCost)}{L.perYear}</dd></div>
@@ -387,20 +390,21 @@ function Result({ t, o, headRef, locale, cta }: { t: Dictionary; o: Extract<Outc
 
       <ol className="s-offers" aria-label={L.offersLabel}>
         {o.alternatives.map((a, i) => {
-          const ratio = Math.max(4, Math.min(100, (a.annualCost / o.current.annualCost) * 100));
+          const scale = Math.max(1, a.annualCost, o.current.annualCost);
+          const barWidth = (cost: number) => `${Math.max(0, cost / scale) * 100}%`;
           const guarantee = a.priceGuaranteeMonths ? L.months.replace("{m}", String(a.priceGuaranteeMonths)) : L.notStated;
           const permanence = stripLabel(a.permanence);
           // condicions secundàries: sense repetir la garantia de preu ni la permanència que ja són a la targeta
           const extra = [...new Set(a.conditions)].filter((c) => !/garanti/i.test(c) && !/^\s*perman/i.test(c));
           return (
             <li key={a.rank} className="s-offer" data-best={i === 0 || undefined}>
-              {i === 0 ? <span className="s-offer__badge">{L.bestBadge}</span> : null}
+              {i === 0 ? <span className="s-offer__badge">{a.saving > 0 ? L.bestBadge : L.lowestAlternative}</span> : null}
               <p className="s-offer__name">{a.label}{a.product ? <span> · {a.product}</span> : null}</p>
-              <p className="s-offer__saving"><b>{eur(a.saving)}</b><span>{L.savingPerYear}</span></p>
-              <p className="s-offer__sub"><span>{eur(a.savingMonthly)} {L.lessPerMonth}</span><span className="s-offer__pct">−{pct(a.savingPct)}</span></p>
+              <p className="s-offer__saving"><b>{eur(Math.abs(a.saving))}</b><span>{savingLabel(a.saving)}</span></p>
+              <p className="s-offer__sub"><span>{eur(Math.abs(a.savingMonthly))} {monthLabel(a.saving)}</span><span className="s-offer__pct">{percentDifference(a.savingPct)}</span></p>
               <div className="s-offer__bars" role="img" aria-label={`${L.currentCostShort}: ${eur(o.current.annualCost)}${L.perYear}. ${L.newCostShort}: ${eur(a.annualCost)}${L.perYear}.`}>
-                <div className="s-offer__bar"><span>{L.barNow}</span><i style={{ width: "100%" }} /><em>{eur(o.current.annualCost)}</em></div>
-                <div className="s-offer__bar" data-new><span>{L.barNew}</span><i style={{ width: `${ratio}%` }} /><em>{eur(a.annualCost)}</em></div>
+                <div className="s-offer__bar"><span>{L.barNow}</span><i style={{ width: barWidth(o.current.annualCost) }} /><em>{eur(o.current.annualCost)}</em></div>
+                <div className="s-offer__bar" data-new><span>{L.barNew}</span><i style={{ width: barWidth(a.annualCost) }} /><em>{eur(a.annualCost)}</em></div>
               </div>
               <p className="s-offer__cost">{L.newCost}: <b>{eur(a.annualCost)}</b>{L.perYear} · {eur(a.monthlyCost)}{L.perMonth}</p>
               <dl className="s-offer__facts">
