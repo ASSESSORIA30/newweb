@@ -49,6 +49,7 @@ const es: Dictionary = {
     title: "SavEnergy IA lee tu factura como lo haría tu asesor.",
     lede:
       "La inteligencia artificial identifica cada concepto de la factura y señala dónde puedes estar pagando de más. Después, un asesor revisa la propuesta contigo.",
+    ledeHighlight: "inteligencia artificial",
     modesLabel: "¿Cómo quieres empezar?",
     modes: { upload: "Sube una factura", estimate: "Estimación sin factura", advisor: "Habla con un asesor" },
     scan: {

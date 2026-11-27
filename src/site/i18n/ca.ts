@@ -48,6 +48,7 @@ const ca = {
     title: "SavEnergy IA llegeix la teva factura com ho faria el teu assessor.",
     lede:
       "La intel·ligència artificial identifica cada concepte de la factura i assenyala on pots estar pagant de més. Després, un assessor revisa la proposta amb tu.",
+    ledeHighlight: "intel·ligència artificial",
     modesLabel: "Com vols començar?",
     modes: { upload: "Puja una factura", estimate: "Estimació sense factura", advisor: "Parla amb un assessor" },
     scan: {

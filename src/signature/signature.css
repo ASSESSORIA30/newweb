@@ -340,6 +340,14 @@
 .g-sav__open .g-lede {
   text-align: center;
 }
+.g-sav__highlight {
+  padding: 0.06em 0.24em;
+  border-radius: 0.24em;
+  background: rgb(var(--accent-rgb) / 0.15);
+  color: var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
 .g-sav__track {
   position: relative;
   height: 520vh;

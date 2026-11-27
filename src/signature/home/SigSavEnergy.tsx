@@ -32,6 +32,8 @@ export function SigSavEnergy({ t, locale }: { t: Dictionary; locale: Locale }) {
   const root = useRef<HTMLElement>(null);
   const s = t.savenergy.scan;
   const g = t.sig;
+  const { lede, ledeHighlight } = t.savenergy;
+  const highlightAt = lede.indexOf(ledeHighlight);
 
   useGSAP(
     () => {
@@ -127,7 +129,15 @@ export function SigSavEnergy({ t, locale }: { t: Dictionary; locale: Locale }) {
         <h2 id="g-sav-title" className="g-display">
           {g.savTitle}
         </h2>
-        <p className="g-lede">{t.savenergy.lede}</p>
+        <p className="g-lede">
+          {highlightAt < 0 ? lede : (
+            <>
+              {lede.slice(0, highlightAt)}
+              <strong className="g-sav__highlight">{ledeHighlight}</strong>
+              {lede.slice(highlightAt + ledeHighlight.length)}
+            </>
+          )}
+        </p>
       </div>
 
       <div className="g-sav__track">
