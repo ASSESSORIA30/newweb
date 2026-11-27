@@ -110,7 +110,7 @@ const es: Dictionary = {
     },
     live: {
       title: "Compara tu factura de luz",
-      hint: "Viviendas con tarifa 2.0TD. PDF, JPG o PNG hasta 8 MB.",
+      hint: "Particulares y empresas con tarifa 2.0TD. PDF, JPG o PNG hasta 8 MB.",
       consentPrivacy: "He leído la información de privacidad y acepto que Assessoria 3.0 AE, SL trate mi factura para calcular una comparativa orientativa de mi suministro.",
       consentRetention: "Entiendo que la factura se conserva como máximo 24 horas y se elimina si no solicito que un asesor me contacte.",
       privacyLink: "Política de privacidad",

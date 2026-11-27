@@ -109,7 +109,7 @@ const ca = {
     },
     live: {
       title: "Compara la teva factura de llum",
-      hint: "Habitatges amb tarifa 2.0TD. PDF, JPG o PNG fins a 8 MB.",
+      hint: "Particulars i empreses amb tarifa 2.0TD. PDF, JPG o PNG fins a 8 MB.",
       consentPrivacy: "He llegit la informació de privacitat i accepto que Assessoria 3.0 AE, SL tracti la meva factura per calcular una comparativa orientativa del meu subministrament.",
       consentRetention: "Entenc que la factura es conserva com a màxim 24 hores i s'elimina si no sol·licito que un assessor em contacti.",
       privacyLink: "Política de privacitat",
