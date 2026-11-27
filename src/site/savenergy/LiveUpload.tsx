@@ -389,6 +389,7 @@ function Result({ t, o, headRef, locale, cta }: { t: Dictionary; o: Extract<Outc
         {o.alternatives.map((a, i) => {
           const ratio = Math.max(4, Math.min(100, (a.annualCost / o.current.annualCost) * 100));
           const guarantee = a.priceGuaranteeMonths ? L.months.replace("{m}", String(a.priceGuaranteeMonths)) : L.notStated;
+          const permanence = stripLabel(a.permanence);
           // condicions secundàries: sense repetir la garantia de preu ni la permanència que ja són a la targeta
           const extra = [...new Set(a.conditions)].filter((c) => !/garanti/i.test(c) && !/^\s*perman/i.test(c));
           return (
@@ -404,7 +405,7 @@ function Result({ t, o, headRef, locale, cta }: { t: Dictionary; o: Extract<Outc
               <p className="s-offer__cost">{L.newCost}: <b>{eur(a.annualCost)}</b>{L.perYear} · {eur(a.monthlyCost)}{L.perMonth}</p>
               <dl className="s-offer__facts">
                 <div><dt>{L.tariffType}</dt><dd>{L.contract[a.contractType] ?? a.contractType}</dd></div>
-                <div><dt>{L.permanence}</dt><dd>{stripLabel(a.permanence)}</dd></div>
+                {permanence && permanence !== "no informada" ? <div><dt>{L.permanence}</dt><dd>{permanence}</dd></div> : null}
                 <div><dt>{L.priceGuarantee}</dt><dd>{guarantee}</dd></div>
               </dl>
               {extra.length ? (
