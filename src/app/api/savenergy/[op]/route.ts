@@ -1,4 +1,4 @@
-import { clientIp, MAX_BODY, OPS, savenergyConfig, sign, verifyTurnstile, type Op, turnstileHosts } from "@/site/savenergy/server";
+import { clientIp, MAX_BODY, OPS, savenergyConfig, sign, checkTurnstile, type Op, turnstileHosts } from "@/site/savenergy/server";
 
 export const maxDuration = 30;
 
@@ -22,8 +22,9 @@ export async function POST(req: Request, ctx: { params: Promise<{ op: string }> 
   if (typeof data !== "object" || data === null || Array.isArray(data)) return json({ error: "peticio_no_valida" }, 400);
   const ip = clientIp(req.headers);
   if ((op as Op) === "session") {
-    const ok = await verifyTurnstile(cfg.turnstile, data.turnstileToken, ip, fetch, turnstileHosts(req.headers.get("x-forwarded-host") ?? req.headers.get("host")));
-    if (!ok) return json({ error: "verificacio_antibot" }, 403);
+    const why = await checkTurnstile(cfg.turnstile, data.turnstileToken, ip, fetch, turnstileHosts(req.headers.get("x-forwarded-host") ?? req.headers.get("host")));
+    // només el codi del motiu (mai el testimoni, la clau ni la IP); la resposta al navegador continua sent neutra
+    if (why) { console.warn(`[savenergy] turnstile_rebutjat motiu=${why}`); return json({ error: "verificacio_antibot" }, 403); }
     delete data.turnstileToken;
     data.turnstile = "verificat";
   }

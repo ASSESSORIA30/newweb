@@ -17,7 +17,8 @@ export const MAX_BODY = 16 * 1024;
 export function savenergyConfig() {
   const crm = (process.env.SAVENERGY_CRM_URL ?? "").replace(/\/$/, "");
   const secret = process.env.SAVENERGY_SHARED_SECRET ?? "";
-  const turnstile = process.env.TURNSTILE_SECRET_KEY ?? "";
+  // sense espais ni salts de línia enganxats per error en copiar la clau al panell
+  const turnstile = (process.env.TURNSTILE_SECRET_KEY ?? "").trim();
   // HTTPS obligatori; http només per a un CRM local de proves (localhost), mai a Vercel.
   const okUrl = /^https:\/\//.test(crm) || (!process.env.VERCEL && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(crm));
   // Previews del CRM protegides amb Vercel Authentication: secret de «Protection Bypass for Automation» (només servidor).
@@ -43,7 +44,8 @@ export function clientIp(h: Headers) {
 
 /** Dominis on es pot haver resolt el repte: els de TURNSTILE_ALLOWED_HOSTS (separats per comes) o, si no n'hi ha, el de la mateixa petició. */
 export function turnstileHosts(requestHost: string | null | undefined): string[] {
-  const clean = (h: string) => h.trim().toLowerCase().replace(/:\d+$/, "");
+  // només el nom del domini: s'ignora un «https://», un camí o un port escrits per error (la comparació continua sent exacta)
+  const clean = (h: string) => h.trim().toLowerCase().replace(/^[a-z]+:\/\//, "").replace(/[/?#].*$/, "").replace(/:\d+$/, "");
   const env = (process.env.TURNSTILE_ALLOWED_HOSTS ?? "").split(",").map(clean).filter(Boolean);
   return env.length ? env : requestHost ? [clean(requestHost)] : [];
 }
@@ -58,19 +60,32 @@ export const TURNSTILE_MAX_AGE_MS = 5 * 60_000;
  * Qualsevol dada que falti a la resposta es considera un rebuig.
  */
 export async function verifyTurnstile(secret: string, token: unknown, ip: string, f: typeof fetch = fetch, hosts: string[] = turnstileHosts(null), now = Date.now()): Promise<boolean> {
-  if (typeof token !== "string" || token.length < 10 || token.length > 4096) return false;
-  if (!hosts.length) return false;
+  return (await checkTurnstile(secret, token, ip, f, hosts, now)) === null;
+}
+
+/**
+ * Igual que `verifyTurnstile`, però retorna el MOTIU del rebuig (`null` si és vàlid) per poder-lo anotar al registre.
+ * El motiu és un codi curt i neutre: mai conté el testimoni, la clau ni cap dada del visitant.
+ */
+export async function checkTurnstile(secret: string, token: unknown, ip: string, f: typeof fetch = fetch, hosts: string[] = turnstileHosts(null), now = Date.now()): Promise<string | null> {
+  if (typeof token !== "string" || token.length < 10 || token.length > 4096) return "testimoni_absent";
+  if (!hosts.length) return "sense_dominis_admesos";
   const body = new URLSearchParams({ secret, response: token, remoteip: ip });
   try {
     // TURNSTILE_VERIFY_URL només per a proves locals (fora de Vercel); a producció sempre és Cloudflare.
     const url = (!process.env.VERCEL && process.env.TURNSTILE_VERIFY_URL) || "https://challenges.cloudflare.com/turnstile/v0/siteverify";
     const r = await f(url, { method: "POST", body, signal: AbortSignal.timeout(8000) });
-    const j = (await r.json()) as { success?: boolean; action?: string; hostname?: string; challenge_ts?: string };
-    if (j.success !== true || j.action !== TURNSTILE_ACTION) return false;
-    if (typeof j.hostname !== "string" || !hosts.includes(j.hostname.toLowerCase())) return false;
+    const j = (await r.json()) as { success?: boolean; action?: string; hostname?: string; challenge_ts?: string; "error-codes"?: unknown };
+    if (j.success !== true) {
+      // codis públics de Cloudflare (p. ex. invalid-input-secret, timeout-or-duplicate); res més
+      const codes = Array.isArray(j["error-codes"]) ? j["error-codes"].filter((c): c is string => typeof c === "string" && /^[a-z-]{3,40}$/.test(c)).slice(0, 4) : [];
+      return `cloudflare:${codes.join("+") || "sense_codi"}`;
+    }
+    if (j.action !== TURNSTILE_ACTION) return "accio_diferent";
+    if (typeof j.hostname !== "string" || !hosts.includes(j.hostname.toLowerCase())) return "domini_no_admes";
     const at = Date.parse(j.challenge_ts ?? "");
-    return Number.isFinite(at) && Math.abs(now - at) <= TURNSTILE_MAX_AGE_MS;
+    return Number.isFinite(at) && Math.abs(now - at) <= TURNSTILE_MAX_AGE_MS ? null : "repte_antic";
   } catch {
-    return false;
+    return "cloudflare_no_respon";
   }
 }
